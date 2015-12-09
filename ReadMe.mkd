@@ -1,0 +1,2 @@
+# General Arduino Code
+Small library where minor projects/snippets are stored. Steal at whim!
