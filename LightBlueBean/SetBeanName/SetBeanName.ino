@@ -7,12 +7,14 @@
 */
 
 void setup() {
+ //String beanName = "Bean2";
+ //Bean.setBeanName(beanName);
 }
 
 void loop()
 {
- String beanName = "TemperatureSensor";
+ String beanName = "Bean1";
  Bean.setBeanName(beanName);
  // Sleep for a minute 
- Bean.sleep(60000);
+ //Bean.sleep(60000);
 }
