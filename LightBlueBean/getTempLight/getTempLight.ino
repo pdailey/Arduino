@@ -45,7 +45,8 @@ void loop(){
   {
     /* If event.light = 0 lux the sensor is probably saturated
        and no reliable data could be generated! */
-    Serial.print("Sensor overload, ");
+       Serial.print("0"); 
+       Serial.print(" lux, ");
   }
   
   // Returns the voltage with conversion of 0.01 V/unit
@@ -64,5 +65,6 @@ void loop(){
   Serial.print(temperature);
   Serial.print(" C");
   Serial.print("\n"); //necessary for node-red to recognize that this is the end of input
+  //Bean.sleep(900000); // 15 min
   Bean.sleep(10000);
 }
