@@ -20,51 +20,44 @@ void configureSensor(void)
 
 void setup(){
   Serial.begin();
-
+  
+  String beanName = "Bean1";
+  Bean.setBeanName(beanName);
+  
   /* Setup the sensor gain and integration time */
   configureSensor();
 }
-
-//int seconds = 1000;
-//int minutes = 60*seconds; 
-//int sleepTime = 10*minutes; 
-
  
 void loop(){
+  // Allow sensors to become fully charged to get accurate readings
+  delay(1000);
+  
   /* Get a new sensor event */ 
   sensors_event_t event;
   tsl.getEvent(&event);
  
   /* Display the results (light is measured in lux) */
-  if (event.light)
-  {
-    Serial.print(event.light); 
-    Serial.print(" lux, ");
-  }
-  else
-  {
-    /* If event.light = 0 lux the sensor is probably saturated
+   /* If event.light = 0 lux the sensor is possibly saturated
        and no reliable data could be generated! */
-       Serial.print("0"); 
-       Serial.print(" lux, ");
-  }
-  
-  // Returns the voltage with conversion of 0.01 V/unit
-  uint16_t batteryReading =  Bean.getBatteryVoltage(); 
+  Serial.print(event.light); 
+  Serial.print(" lux, ");
+ 
   
   // Get the current ambient temperature in degrees Celsius with a range of -40 C to 87 C.
   int temperature = Bean.getTemperature();
- 
+  //Serial.print(stringToPrint);
+  Serial.print(temperature);
+  Serial.print(" C, ");
+  
+  // Returns the voltage with conversion of 0.01 V/unit
+  uint16_t batteryReading =  Bean.getBatteryVoltage(); 
   // Format the output like "Battery voltage: 2.60 V"
   Serial.print(batteryReading/100);
   Serial.print(".");
   Serial.print(batteryReading%100);
-  Serial.print(" V, ");
+  Serial.print(" V");
   
-  //Serial.print(stringToPrint);
-  Serial.print(temperature);
-  Serial.print(" C");
   Serial.print("\n"); //necessary for node-red to recognize that this is the end of input
-  //Bean.sleep(900000); // 15 min
-  Bean.sleep(10000);
+  Bean.sleep(900000); // 15 min
+  //Bean.sleep(10000);
 }
