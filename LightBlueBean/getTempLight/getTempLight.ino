@@ -29,7 +29,7 @@ void setup(){
 }
  
 void loop(){
-  // Allow sensors to become fully charged to get accurate readings
+  // Wait a moment for capacitance effects to settle
   delay(1000);
   
   /* Get a new sensor event */ 
