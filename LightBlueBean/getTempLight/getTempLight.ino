@@ -1,9 +1,13 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_TSL2561_U.h>
+#include "Adafruit_MCP9808.h" // I2C Temperature Sensor
 
 Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1);
+Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
+
+// Light Sensor
 void configureSensor(void)
 {
   /* You can also manually set the gain or enable auto-gain support */
@@ -44,9 +48,10 @@ void loop(){
  
   
   // Get the current ambient temperature in degrees Celsius with a range of -40 C to 87 C.
-  int temperature = Bean.getTemperature();
+   tempsensor.shutdown_wake(0);   // Don't remove this line! required before reading temp
+  float c = tempsensor.readTempC(); // Read and print out the temperature
   //Serial.print(stringToPrint);
-  Serial.print(temperature);
+  Serial.print(c);
   Serial.print(" C, ");
   
   // Returns the voltage with conversion of 0.01 V/unit
