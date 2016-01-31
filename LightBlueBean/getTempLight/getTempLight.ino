@@ -11,7 +11,7 @@ Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 void configureSensor(void)
 {
   /* You can also manually set the gain or enable auto-gain support */
-  tsl.enableAutoRange(true);            /* Auto-gain ... switches automatically between 1x and 16x */
+  tsl.enableAutoRange(true);/* Auto-gain ... switches automatically between 1x and 16x */
   
   /* Changing the integration time gives you better sensor resolution (402ms = 16-bit data) */
   tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_101MS);  /* medium resolution and speed   */
