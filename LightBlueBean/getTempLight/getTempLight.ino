@@ -53,6 +53,7 @@ void loop(){
   float c = tempsensor.readTempC(); // Read and print out the temperature
   Serial.print(c);
   Serial.print(" C, ");
+  delay(250); // This makes the temp sensor work for some g***** reason
   tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere
 
   //// VOLATAGE SENSOR /////
