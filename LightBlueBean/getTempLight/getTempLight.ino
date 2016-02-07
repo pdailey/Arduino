@@ -22,7 +22,7 @@ void setup(){
   Serial.begin();
 
   // Rename the bean for node-red sketch
-  String beanName = "Bean1";
+  String beanName = "LiteBean";
   Bean.setBeanName(beanName);
   
   

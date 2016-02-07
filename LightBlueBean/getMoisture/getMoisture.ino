@@ -7,7 +7,7 @@ static uint8_t powerPin = 5; // will be used to power soil sensor. In series wit
 
 void setup() {
     // Rename the bean for node-red sketch
-  String beanName = "Bean2";
+  String beanName = "SoilBean";
   Bean.setBeanName(beanName);
 
   Wire.begin();
@@ -17,22 +17,10 @@ void setup() {
   
   // Start Soil Sensor
   sensor.begin(); // reset sensor
-  
-  // Configure Bean to wake up when a client connects
-  Bean.enableWakeOnConnect(true);
 }
 
-int counter = 0;
-
-// Loop runs once at program start.
-// When a client connects, Bean wakes up and runs loop again.
-// Loop continues to run as long as a client is connected.
 void loop(){
-  bool connected = Bean.getConnectionState();
-  // Check if client has disconnected
-  if (connected && counter == 0) {
-    digitalWrite(powerPin, HIGH);
-    
+    digitalWrite(powerPin, HIGH); // Power up the Moisture Sensor
     delay(1000); // Wait a moment for capacitance effects to settle
 
     //// SOIL SENSOR /////
@@ -56,12 +44,4 @@ void loop(){
   
     Serial.print("\n"); //necessary for node-red to recognize that this is the end of input
     digitalWrite(powerPin, LOW);
-    counter = 1;
-  } else {
-    // Client disconnected
-    // Sleep for a long time to conserve power.
-    // 0xFFFFFFFF = 4,294,967,295 milliseconds = 49 days
-    counter = 0;
-    Bean.sleep(0xFFFFFFFF);
-  }
 }
