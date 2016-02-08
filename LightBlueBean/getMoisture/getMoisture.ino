@@ -12,17 +12,21 @@ void setup() {
 
   Wire.begin();
   Serial.begin();
+  Serial.print("Serial Up!");
 
   pinMode(powerPin, OUTPUT);
-  
+  digitalWrite(powerPin, HIGH);
   // Start Soil Sensor
-  sensor.begin(); // reset sensor
+
+  //sensor.begin(); // reset sensor
+  Serial.print("Sensor Up!");
 }
 
 void loop(){
     digitalWrite(powerPin, HIGH); // Power up the Moisture Sensor
-    delay(1000); // Wait a moment for capacitance effects to settle
+    delay(10000); // Wait a moment for capacitance effects to settle
 
+    sensor.begin(); // reset sensor
     //// SOIL SENSOR /////
     // Returns the moisture level of the soil by capacitance
     Serial.print(sensor.getCapacitance()); //read capacitance register
@@ -44,4 +48,7 @@ void loop(){
   
     Serial.print("\n"); //necessary for node-red to recognize that this is the end of input
     digitalWrite(powerPin, LOW);
+
+    //Bean.sleep(900000); // 15 min
+    Bean.sleep(10000);
 }
