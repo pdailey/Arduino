@@ -5,7 +5,7 @@
 #define  REG_MAP_SIZE       6     //size of array ot hold all register data 
 #define  MAX_SENT_BYTES     3     // maximum bytes that can be recieved from master 
 #define  INTERRUPT_PIN      2
-#define  IDENTIFICATION     0x0D
+#define  IDENTIFICATION     5
 /*three bytes is the most amount of data that would ever need to be sent from the master.  
 The first byte sent from the master is always the register address.  For our device, we only 
 have two writable registers in our map and they are the configuration register and mode register.  
@@ -45,7 +45,7 @@ void setup()
   Wire.begin(SLAVE_ADDRESS); 
   Wire.onRequest(requestEvent);
   Wire.onReceive(receiveEvent);
-  registerMap[6] = IDENTIFICATION; // ID register
+  registerMapTemp[5] = IDENTIFICATION; // ID register
 
 
   
@@ -76,8 +76,8 @@ void loop()
   newDataAvailable = 1;
   toggleInterrupt();
   
-  Serial.print("\nDistance in centimers: ");
-  Serial.print(distance);
+  //Serial.print("\nDistance in centimers: ");
+  //Serial.print(distance);
   delay(500);                                     //make it readable
 }
 
@@ -97,7 +97,7 @@ void storeData(){
   registerMapTemp[arrayIndex] = modeRegister;
   arrayIndex++;
   registerMapTemp[arrayIndex] = configRegister;
-  Serial.print("Register Map Temp: ");
+  Serial.print("\n Register Map Temp: ");
   for(int n=0; n<6; n++){
     Serial.print(registerMapTemp[n]);
     Serial.print("-");
