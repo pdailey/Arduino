@@ -1,5 +1,7 @@
+
 #include <SPI.h>
 #include <SD.h>
+
 
 // File Name Variables
 File file;
@@ -15,7 +17,8 @@ boolean stringComplete = false;  // whether the string is complete
 const double IMU_BAUD = 115200;
 //const double GPS_BAUD = 57600;
 
-void setup() {
+
+void setup() {  
   /*=== USB and Board Serial===
    * If the Serial1 baud is not set correctly, the board will not 
    * recognize the newline character, and data will not be returned.
