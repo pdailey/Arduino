@@ -13,6 +13,9 @@
 #include <SPI.h>
 #include <SD.h>
 
+const double IMU_BAUD = 115200;
+const double GPS_BAUD = 57600;
+
 const int chipSelect = 4;
 
 
@@ -21,11 +24,15 @@ boolean stringComplete = false;  // whether the string is complete
 
 void setup() {
   // initialize serial:
-  Serial1.begin(115200);
+  Serial.begin(115200);
+  Serial1.begin(GPS_BAUD);
+  //Serial1.begin(IMU_BAUD);
+  
   while (!Serial) {
     ; // wait for serial port to connect. DO NOT REMOVE!
   }
   
+  Serial.println("Up and running BABY!");
   
   // reserve 200 bytes for the inputString:
   inputString.reserve(200);
@@ -53,27 +60,4 @@ void loop() {
       stringComplete = true;
     }
   }
-
 }
-
-/*
-  SerialEvent occurs whenever a new data comes in the
- hardware serial RX.  This routine is run between each
- time loop() runs, so using delay inside loop can delay
- response.  Multiple bytes of data may be available.
- */
- // SerialEvent does not work on 32u4 boards!
-/*void serialEvent() {
-  while (Serial1.available()) {
-    Serial1.print("SerialEvent!");
-    // get the new byte:
-    char inChar = (char)Serial1.read();
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n') {
-      stringComplete = true;
-    }
-  }
-}*/
