@@ -52,11 +52,11 @@ void setup() {
 
     if (SD.exists(file_name)) { //check if file name already exists
       Serial.print(file_name);
-      Serial.println(" exists.");
+      //Serial.println(" exists.");
     } else {  // write to file
       file = SD.open(file_name, FILE_WRITE);
-      Serial.print("Saving to ");
-      Serial.println(file_name);
+      //Serial.print("Saving to ");
+      //Serial.println(file_name);
       file.close();
       break;
     }
@@ -96,8 +96,9 @@ void loop() {
 
 /*=== Write Data to SD Card ===*/
 void writeDataToSD() {
-  Serial.print(inputString);
+  //Serial.print(inputString);
 
+  // Open file for writing
   file = SD.open(file_name, FILE_WRITE);
 
   // If file sucessfully opened
