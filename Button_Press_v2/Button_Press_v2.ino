@@ -20,6 +20,7 @@ void setup (){
   Serial1.begin(BAUD);
   // DEBUGGING
   while(!Serial){}
+
   
   Serial.println("Waiting for button press...");
 }
