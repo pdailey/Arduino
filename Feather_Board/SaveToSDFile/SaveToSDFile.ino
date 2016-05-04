@@ -2,7 +2,6 @@
 #include <SPI.h>
 #include <SD.h>
 
-
 /* Button Variables */
 #define BUTTON_PIN 2       // Connect a tactile button switch (or something similar)
 #define PULLUP true        // Use Arduino's internal pullup resistor.
@@ -12,9 +11,18 @@
 #define DEBOUNCE_MS 20     // A debounce time of 20 milliseconds usually works well for tactile button switches.
 #define LED_PIN 13         // The standard Arduino "Pin 13" LED
 
+#define PULSE_PIN 11        //send pulses here
+#define READ_PIN 9         //read pulses here
+
+// Declare the button
 Button button(BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);
+Button pulse(READ_PIN, PULLUP, INVERT, DEBOUNCE_MS);    
+
 boolean ledState;          //A variable that keeps the current LED status
 boolean startLogging = false;
+
+#define nth 10    // Number of lines saved to the SD card between pulses
+byte count = 0;
 
 /* File Name Variables */
 File file;
@@ -36,45 +44,47 @@ boolean stringComplete = false;  // whether the string is complete
 byte counter = 0;
 
 void setup() { 
-  /*=== USB and Board Serial===
-   * If the Serial1 baud is not set correctly, the board will not 
-   * recognize the newline character, and data will not be returned.
-   */
+  //=== USB and Board Serial=== //
   Serial.begin(BAUD);
   Serial1.begin(BAUD);
 
-  // Debugging: Arduino will not run without USB Serial connected  
-  //while (!Serial) {;}
-
-  /*=== SD Card ===*/
-  if (!SD.begin(4)) {
-    Serial.println("SD initialization failed!");
-    return;
-  } else {
-    Serial.println("SD initialized.");
-    createSaveFile();
-  }
-
-  /*=== LED Pin ===*/
-  pinMode(LED_PIN, OUTPUT);    //Set the LED pin as an output
-
   // Reserve bytes for the inputString:
   inputString.reserve(512);
+
+  // Debugging: Arduino will not run without USB Serial connected  
+  while (!Serial) {;}
+
+  // === SD Card === //
+  initializeSDCard();
+
+
+  // === Pins === //
+  pinMode(LED_PIN, OUTPUT);    //Set the LED pin as an output
+  pinMode(PULSE_PIN, OUTPUT); 
 
   Serial.println("Waiting for button press...");
 }
 
 
-
 void loop() {
-  /*=== Get data from Serial1 === */
-  button.read();                    //Read the button
+  //Read buttons
+  button.read(); 
 
-  /*=== Handle Button Press === */
+  //DEBUGGING                 
+  pulse.read();
+
+  // Process Button Press
   if (button.wasReleased()) {       //If the button was released, change the LED state and start logging data
     buttonRoutine();
   }
 
+  // DEBUGGING
+  // Detect pulse
+  if (pulse.wasReleased()) {
+    Serial.println("Pulse Confirmed!");
+  }
+
+  // Log Data and send pulses
   if(startLogging){
   /*=== Get data from Serial1 === */
     while (Serial1.available () > 0){
@@ -82,7 +92,16 @@ void loop() {
     }
   }
 }
-  
+
+void initializeSDCard(){
+  if (!SD.begin(4)) {
+    Serial.println("SD initialization failed!");
+    return;
+  } else {
+    Serial.println("SD initialized.");
+    createSaveFile();
+  }
+}
  
 /*=== Data Files ===*/
 // Select a fileneame to save data to. Look for files already on the SD card to prevent naming collisions.
@@ -102,6 +121,7 @@ void createSaveFile(){
   }
 }
 
+
 void buttonRoutine(){
   startLogging = true;
   
@@ -110,6 +130,7 @@ void buttonRoutine(){
   digitalWrite(LED_PIN, ledState);
   Serial.println("Triggered! (button pressed)");
 }
+
 
 void processIncomingByte (const byte inByte){
   static char input_line [MAX_INPUT];
@@ -120,9 +141,11 @@ void processIncomingByte (const byte inByte){
       
       // terminator reached! process input_line here ...
       writeDataToSD(input_line);
-      
+
       // reset buffer for next time
-      input_pos = 0;  
+      input_pos = 0;
+      sendPulse();
+
       break;
     case '\r':   // discard carriage return
       break;
@@ -135,7 +158,19 @@ void processIncomingByte (const byte inByte){
 } 
 
 
-/*=== Write Data to SD Card ===*/
+void sendPulse(){
+  if(count % nth == 0){
+    Serial.println("You've dones this for the nth time!");
+    digitalWrite(PULSE_PIN, HIGH);
+    count = 0;
+  } else {
+    digitalWrite(PULSE_PIN, LOW);
+  }
+
+  count++;
+}
+
+
 void writeDataToSD(const char * data) {
   // DEBUGGING
   Serial.println(data);
