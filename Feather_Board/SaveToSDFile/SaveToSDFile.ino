@@ -25,7 +25,7 @@ const int MAX_FILES = 100;
 
 /* Serial Communication Variables */
 // how much serial data we expect before a newline
-const unsigned int MAX_INPUT = 50;
+const unsigned int MAX_INPUT = 200;
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -44,7 +44,7 @@ void setup() {
   Serial1.begin(BAUD);
 
   // Debugging: Arduino will not run without USB Serial connected  
-  while (!Serial) {;}
+  //while (!Serial) {;}
 
   /*=== SD Card ===*/
   if (!SD.begin(4)) {
@@ -137,14 +137,16 @@ void processIncomingByte (const byte inByte){
 
 /*=== Write Data to SD Card ===*/
 void writeDataToSD(const char * data) {
+  // DEBUGGING
   Serial.println(data);
-  Serial.println(counter);
+  //Serial.println(counter);
+  
   // Open file for writing
   file = SD.open(file_name, FILE_WRITE);
 
   // If file sucessfully opened
   if (file) {
-    file.print(data);
+    file.println(data);
     file.close();
     counter++;
   } else {
