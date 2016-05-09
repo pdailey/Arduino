@@ -35,7 +35,7 @@ const byte MAX_FILES = 100;
 #define BAUD 57600
 const byte MAX_INPUT = 200; // how much serial data we expect before a newline
 
-LedFlasher strobe (13, 500, 500); // pin, off for mS, on for mS
+LedFlasher statusLED (13, 500, 500); // pin, off for mS, on for mS
 
 void setup() {
   // USB and Board Serial
@@ -43,7 +43,7 @@ void setup() {
   Serial1.begin(BAUD);
 
   // Debugging: Arduino will not run without USB Serial connected
-  while (!Serial) {;}
+  //while (!Serial) {;}
 
   // SD Card
   initializeSDCard();
@@ -53,7 +53,7 @@ void setup() {
   pinMode(PULSE_PIN, OUTPUT);
 
   Serial.println("Waiting for button press...");
-  strobe.begin();
+  statusLED.begin();
 }
 
 
@@ -73,7 +73,7 @@ void loop() {
       processIncomingByte (Serial1.read ());
     }
   } else {
-    strobe.update();
+    statusLED.update();
   }
 }
 
