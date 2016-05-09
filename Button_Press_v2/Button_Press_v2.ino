@@ -3,7 +3,7 @@
 #define BAUD 57600
 #define BUTTON_PIN 2       //Connect a tactile button switch (or something similar)
                            //from Arduino pin 2 to ground.
-#define PULSE_PIN 11        //send pulses here
+#define PULSE_PIN 11        //send pulses from here
 #define READ_PIN 9         //read pulses here
 
 
@@ -29,7 +29,6 @@ void setup (){
   pinMode(PULSE_PIN, OUTPUT); 
   
   Serial.begin(BAUD);
-  Serial1.begin(BAUD);
   
   // DEBUGGING
   while(!Serial){}
@@ -56,11 +55,13 @@ void loop (){
     Serial.println("TRIGGERED!!!");
   }
 
-  if (pulse.wasReleased()) {       //If the button was released, change the LED state
+  if (pulse.wasReleased()) { 
     Serial.println("You've dones this for the nth time!");
   } else {
     Serial.println(count);
   }
+  
+  delay(250);
 
   count++;
   
