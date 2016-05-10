@@ -30,18 +30,19 @@ const byte MAX_FILES = 100;
 
 
 // Serial Communication Variables
-#define BAUD 57600
+const unsigned int BAUD = 57600;
 const byte MAX_INPUT = 200; // how much serial data we expect before a newline
 
 
 LedFlasher statusLED (13, 500, 500); // pin, off for mS, on for mS
+
 void setup() {
   // USB and Board Serial
   Serial.begin(BAUD);
   Serial1.begin(BAUD);
 
   // Debugging: Arduino will not run without USB Serial connected
-  //while (!Serial) {;}
+  while (!Serial) {;}
 
   // SD Card
   initializeSDCard();
