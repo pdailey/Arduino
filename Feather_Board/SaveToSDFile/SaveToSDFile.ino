@@ -11,7 +11,7 @@ const byte DEBOUNCE_MS = 20;     // A debounce time of 20 milliseconds works wel
 const byte LED_PIN = 13;         // The standard Arduino "Pin 13" LED
 
 const byte BUTTON_PIN = 2;       // tactile button switch 
-const byte PULSE_PIN = 11;        // Recieves timing pulses
+const byte PULSE_PIN = 9;        // Recieves timing pulses
 
 Button button(BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);
 Button pulse_line(PULSE_PIN, PULLUP, INVERT, DEBOUNCE_MS);
