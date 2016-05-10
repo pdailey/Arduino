@@ -5,23 +5,21 @@
 
 
 // Button Variables
-const byte BUTTON_PIN = 2;       // Connect a tactile button switch (or something similar)
-
 const boolean PULLUP = true;     // Use Arduino's internal pullup resistor.
 const boolean INVERT = true;     // Pullup resistor will keep the pin high unless the button is pressed
 const byte DEBOUNCE_MS = 20;     // A debounce time of 20 milliseconds works well for tactile button switches.
 const byte LED_PIN = 13;         // The standard Arduino "Pin 13" LED
 
+const byte BUTTON_PIN = 2;       // tactile button switch 
+const byte PULSE_PIN = 11;        // Recieves timing pulses
+
 Button button(BUTTON_PIN, PULLUP, INVERT, DEBOUNCE_MS);
+Button pulse_line(PULSE_PIN, PULLUP, INVERT, DEBOUNCE_MS);
+
 
 // State Variables
 boolean ledState = false;       // Keeps the current LED status
 boolean startLogging = false;   // Data logging occurs when true
-
-// Pulse Variables
-const byte PULSE_PIN = 11;        // Sends pulses
-const byte nth = 10;    // Number of lines saved to the SD card between pulses
-byte count = 0;         // count of lines written to SD
 
 
 // File Name Variables
@@ -35,8 +33,8 @@ const byte MAX_FILES = 100;
 #define BAUD 57600
 const byte MAX_INPUT = 200; // how much serial data we expect before a newline
 
-LedFlasher statusLED (13, 500, 500); // pin, off for mS, on for mS
 
+LedFlasher statusLED (13, 500, 500); // pin, off for mS, on for mS
 void setup() {
   // USB and Board Serial
   Serial.begin(BAUD);
@@ -50,7 +48,6 @@ void setup() {
 
   // Pins
   pinMode(LED_PIN, OUTPUT);    //Set the LED pin as an output
-  pinMode(PULSE_PIN, OUTPUT);
 
   Serial.println("Waiting for button press...");
   statusLED.begin();
@@ -61,9 +58,16 @@ void loop() {
   //Read buttons
   button.read();
 
+  // Read the line to see if we need triggering
+  pulse_line.read();
+
   // Process Button Press
   if (button.wasReleased()) {       //If the button was released, change the LED state and start logging data
     buttonRoutine();
+  }
+
+  if (pulse_line.wasReleased()) {       //If the button was released, change the LED state and start logging data
+    pulseRoutine();
   }
 
   // Log Data and send pulses
@@ -77,6 +81,7 @@ void loop() {
   }
 }
 
+
 void initializeSDCard(){
   if (!SD.begin(4)) {
     Serial.println("SD initialization failed!");
@@ -87,7 +92,7 @@ void initializeSDCard(){
   }
 }
 
-/*=== Data Files ===*/
+
 // Select a fileneame to save data to. Look for files already on the SD card to prevent naming collisions.
 void createSaveFile(){
   for (int i = 1; i < MAX_FILES; i++) {
@@ -116,12 +121,20 @@ void buttonRoutine(){
 }
 
 
+void pulseRoutine(){
+  startLogging = true;
+
+  // DEBUGGING
+  Serial.println("Pulsed! (pulse recieved)");
+}
+
+
 void processIncomingByte (const byte inByte){
-  static char input_line [MAX_INPUT];
+  static char input_line[MAX_INPUT];
   static unsigned int input_pos = 0;
   switch (inByte){
     case '\n':   // end of text
-      input_line [input_pos] = 0;  // terminating null byte
+      input_line[input_pos] = 0;  // terminating null byte
 
       // terminator reached! process input_line here ...
       writeDataToSD(input_line);
@@ -134,19 +147,9 @@ void processIncomingByte (const byte inByte){
     default:
       // keep adding if not full ... allow for terminating null byte
       if (input_pos < (MAX_INPUT - 1))
-        input_line [input_pos++] = inByte;
+        input_line[input_pos++] = inByte;
       break;
     }
-}
-
-
-void sendPulse(){
-  if(count % nth == 0){
-    digitalWrite(PULSE_PIN, HIGH);
-    count = 0;
-  } else {
-    digitalWrite(PULSE_PIN, LOW);
-  }
 }
 
 
@@ -159,8 +162,6 @@ void writeDataToSD(const char * data) {
 
   // If file successfully opened, write data and send a timing pulse
   if (file) {
-    sendPulse();
-    count++;
     file.println(data);
     file.close();
   } else {
