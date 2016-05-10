@@ -1,7 +1,7 @@
 #include <Button.h>
 
 #define BAUD 57600
-#define PULSE_PIN 11        //send pulses from here
+#define PULSE_PIN 7        //send pulses from here
 #define LED_PIN 13         //The standard Arduino "Pin 13" LED
 #define nth 5    // Number of counts until pulse
 
@@ -28,7 +28,7 @@ void loop (){
     count = 0;
   } else {
     digitalWrite(LED_PIN, LOW);
-    digitalWrite(PULSE_PIN, HIGH);
+    digitalWrite(PULSE_PIN, LOW);
   }
   
   count++;
