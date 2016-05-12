@@ -114,14 +114,16 @@ LedFlasher statusLED (LED_PIN, 500, 500); // SYNTAX: pin, off for mS, on for mS
 
 // State Variables
 boolean ledState = false;       // Keeps the current LED status
+boolean sdPresent = false;      // Was the SD properly enabled?
 boolean startLogging = false;   // Data logging occurs when true
+
 
 
 // File Name Variables
 File file;
 String base_name = "log_";
 String file_name;
-const byte MAX_FILES = 100;
+const int MAX_FILES = 1000;
 
 
 // Serial Communication Variables
@@ -138,10 +140,11 @@ void setup() {
   Serial1.begin(BAUD);
 
   // Debugging: Arduino will not run without USB Serial connected
-  while (!Serial) {;}
+  //while (!Serial) {;}
 
   // SD Card
   if(initializeSDCard()){
+    sdPresent = true;
     createSaveFile();
   }
 
@@ -179,7 +182,10 @@ void loop() {
     while (Serial1.available () > 0){
       processIncomingByte (Serial1.read ());
     }
-  } else { // Otherwise continue to flash the LED
+  }
+
+  // Flash the light if logging has not been triggers or the SD is not present
+  if(!startLogging || !sdPresent){
     statusLED.update();
   }
 }
@@ -188,7 +194,6 @@ void loop() {
 /* =========================================================================================
  * Look for an SD card and establish a connection.
  * Returns true if the SD card is initialized.
- * TODO: Could have the arduino blink repeatedly if the SD is not present.
  * ========================================================================================*/
 bool initializeSDCard(){
   if (!SD.begin(4)) {
@@ -229,9 +234,10 @@ void buttonRoutine(){
   startLogging = true;
 
   // DEBUGGING
-  ledState = !ledState;
+  //ledState = !ledState;
+  ledState = HIGH;
   digitalWrite(LED_PIN, ledState);
-  Serial.println("Triggered! (button pressed)");
+  //Serial.println("Triggered! (button pressed)");
 }
 
 
@@ -242,7 +248,7 @@ void pulseRoutine(){
   startLogging = true;
 
   // DEBUGGING
-  Serial.println("Pulsed! (pulse recieved)");
+  //Serial.println("Pulsed! (pulse recieved)");
 }
 
 
@@ -281,15 +287,17 @@ void processIncomingByte (const byte inByte){
  * ========================================================================================*/
 void writeDataToSD(const char * data) {
   // DEBUGGING
-  Serial.println(data);
+  //Serial.println(data);
 
   file = SD.open(file_name, FILE_WRITE);
 
   // If file successfully opened, write data and send a timing pulse
   if (file) {
+    //sdPresent = true;
     file.println(data);
     file.close();
   } else {
-    Serial.println("Error opening file");
+    sdPresent = false;
+    //Serial.println("Error opening file");
   }
 }
