@@ -4,7 +4,7 @@
 1. Plug the lipo battery into the Arudino feather. Secure the LiPo to the lid of the case.
 - Mount the case to the bicycle frame underneath the bicycle seat, using the rails as a guide. Secure with zip ties.
 - Check that the case is level in both lean and pitch. Adjust the bicycle saddle and seatpost if necessary.
-- (Optinal) Plug the audio jack into the Beaglebone case into the port marked IMU/GPS.
+- Plug the audio jack into the Beaglebone case into the port marked IMU/GPS.
 
 ## Operation
 ### Standby Mode
