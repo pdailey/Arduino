@@ -1,7 +1,7 @@
 // This example checks the state of the rotary encoder in the loop() function.
 // The current position is printed on output when changed.
 
-
+#include <RotaryEncoder.h>
 // Setup a RoraryEncoder for pins A2 and A3:
 RotaryEncoder encoder(A2, A3);
 
