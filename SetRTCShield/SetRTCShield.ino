@@ -1,5 +1,11 @@
-// Date and time functions using a DS1307 RTC connected via I2C and Wire lib
-
+/*
+ * Set the RTC
+ * 
+ * Upload this program to set and test the RTC Shield.
+ * 
+ * Info on the  DS1307 RTC:  It can count leap-years and knows how many days are in 
+ * a month, but it doesn't take care of Daylight Savings Time 
+ */
 #include <Wire.h>
 #include "RTClib.h"
 
@@ -12,16 +18,16 @@ void setup () {
 
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
-    // following line sets the RTC to the date & time this sketch was compiled
-    // uncomment it & upload to set the time, date and start run the RTC!
-    //RTC.adjust(DateTime(__DATE__, __TIME__));
+    // The following line sets the RTC to the date & time this sketch was compiled
+    // Uncomment it & upload to set the time, date and start run the RTC!
+    RTC.adjust(DateTime(__DATE__, __TIME__));
   }
-
 }
 
 void loop () {
     DateTime now = RTC.now();
-    
+
+    Serial.print("The current time is: ");
     Serial.print(now.year(), DEC);
     Serial.print('/');
     Serial.print(now.month(), DEC);
@@ -34,30 +40,6 @@ void loop () {
     Serial.print(':');
     Serial.print(now.second(), DEC);
     Serial.println();
-    
-    Serial.print(" since 1970 = ");
-    Serial.print(now.unixtime());
-    Serial.print("s = ");
-    Serial.print(now.unixtime() / 86400L);
-    Serial.println("d");
-    
-    // calculate a date which is 7 days and 30 seconds into the future
-    DateTime future (now.unixtime() + 7 * 86400L + 30);
-    
-    Serial.print(" now + 7d + 30s: ");
-    Serial.print(future.year(), DEC);
-    Serial.print('/');
-    Serial.print(future.month(), DEC);
-    Serial.print('/');
-    Serial.print(future.day(), DEC);
-    Serial.print(' ');
-    Serial.print(future.hour(), DEC);
-    Serial.print(':');
-    Serial.print(future.minute(), DEC);
-    Serial.print(':');
-    Serial.print(future.second(), DEC);
-    Serial.println();
-    
-    Serial.println();
-    delay(3000);
+       
+    delay(10000);
 }
