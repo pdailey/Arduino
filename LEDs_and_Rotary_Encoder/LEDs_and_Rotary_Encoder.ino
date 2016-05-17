@@ -114,10 +114,8 @@ void loop() {
 
 
   if (debugFlag) {
-    Serial.println("HI!");
+    Serial.println(F("DEBUGGING:"));
   }
-
-
 }
 
 
