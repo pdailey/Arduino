@@ -7,7 +7,7 @@
 */
 
 #include <NewTone.h>
-#include "pitches.h"
+#include "NewPitches.h"
 #include "Led.h"
 
 const byte ledPin = 13;
@@ -31,27 +31,27 @@ byte thisSong = 0;
 boolean repeatMelody = false;
 
 // Set melodies - this creates the melodies. The numbers under 12 are the regular keys. Any higher number is a frequency that can't be made by pressing a single key (sharps and flats).
-const int melody[][20] = {
-  //{NOTE_D4,NOTE_G4,NOTE_FS4,NOTE_G4,NOTE_B4,NOTE_A4,NOTE_G4,NOTE_A4,NOTE_B4,NOTE_A4,NOTE_G4,NOTE_G4,NOTE_B4,NOTE_D5,NOTE_E5,0,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_B4,NOTE_G4,NOTE_A4,NOTE_G4,NOTE_A4,NOTE_B4,NOTE_A4,NOTE_G4,NOTE_E4,NOTE_E4,NOTE_D4,NOTE_G4,0,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_B4,NOTE_G4,NOTE_A4,NOTE_G4,NOTE_A4,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_B4,NOTE_D5,NOTE_E5,0,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_B4,NOTE_G4,NOTE_A4,NOTE_G4,NOTE_A4,NOTE_B4,NOTE_A4,NOTE_G4,NOTE_E4,NOTE_E4,NOTE_D4,NOTE_G4}, / // Auld Lang Syne
-  //{NOTE_E4,NOTE_A4,NOTE_C5,NOTE_B4,NOTE_A4,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_A4,NOTE_C5,NOTE_B4,NOTE_G4,NOTE_AS4,NOTE_E4,NOTE_E4,NOTE_A4,NOTE_C5,NOTE_B4,NOTE_A4,NOTE_E5,NOTE_G5,NOTE_FS5,NOTE_F5,NOTE_CS5,NOTE_F5,NOTE_E5,NOTE_DS5,NOTE_DS4,NOTE_C5,NOTE_A4,NOTE_C5}, // Harry Potter
-  //{NOTE_AS4,NOTE_D5,NOTE_C5,NOTE_D5,NOTE_G4,0,NOTE_DS5,NOTE_D5,NOTE_DS5,NOTE_D5,NOTE_C5,0,NOTE_DS5,NOTE_D5,NOTE_DS5,NOTE_G4,0,NOTE_C5,NOTE_AS4,NOTE_C5,NOTE_AS4,NOTE_A4,NOTE_C5,NOTE_AS4,NOTE_D5,NOTE_C5,NOTE_D5,NOTE_G4,0,NOTE_DS5,NOTE_D5,NOTE_DS5,NOTE_D5,NOTE_C5,0,NOTE_DS5,NOTE_D5,NOTE_DS5,NOTE_G4,0,NOTE_C5,NOTE_AS4,NOTE_C5,NOTE_AS4,NOTE_A4,NOTE_C5,NOTE_AS4,NOTE_A4,NOTE_AS4,NOTE_C5,NOTE_AS4,NOTE_C5,NOTE_D5,NOTE_C5,NOTE_AS4,NOTE_A4,NOTE_G4,NOTE_DS5,NOTE_D5,NOTE_D5,NOTE_D5,NOTE_DS5,NOTE_D5,NOTE_C5,NOTE_D5}, // Final countdown
-  //{NOTE_D4,NOTE_F4,NOTE_D5,NOTE_D4,NOTE_F4,NOTE_D5,NOTE_E5,NOTE_F5,NOTE_E5,NOTE_F5,NOTE_E5,NOTE_C5,NOTE_A4,NOTE_A4,NOTE_D4,NOTE_F4,NOTE_G4,NOTE_A4,NOTE_A4,NOTE_D4,NOTE_F4,NOTE_G4,NOTE_E4}, // Song of storms
-  //{NOTE_C4,NOTE_G4,NOTE_F4,NOTE_E4,NOTE_D4,NOTE_C5,NOTE_G4,NOTE_F4,NOTE_E4,NOTE_D4,NOTE_C5,NOTE_G4,NOTE_F4,NOTE_E4,NOTE_F4,NOTE_D4}, // Star wars
-  //{NOTE_F4,NOTE_A4,NOTE_B4,NOTE_F4,NOTE_A4,NOTE_B4,NOTE_F4,NOTE_A4,NOTE_B4,NOTE_E5,NOTE_D5,NOTE_B4,NOTE_C5,NOTE_B4,NOTE_G4,NOTE_E4,NOTE_D4,NOTE_E4,NOTE_G4,NOTE_E4}, // Lost woods
-  //{ NOTE_C2, NOTE_F3, NOTE_C3, NOTE_A2, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_F3, NOTE_AS3, NOTE_G3, NOTE_F3, NOTE_E3, NOTE_D3, NOTE_CS3, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_A2, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_AS3, 0, NOTE_G3, NOTE_F3, NOTE_E3, NOTE_D3, NOTE_CS3, NOTE_C3 }, // Jeopardy
-  { NOTE_C4, NOTE_D4, NOTE_F4, NOTE_D4, NOTE_A4, 0, NOTE_A4, NOTE_G4, 0, NOTE_C4, NOTE_D4, NOTE_F4, NOTE_D4, NOTE_G4, 0, NOTE_G4, NOTE_F4, 0 } // Rick Roll
+const int melody[][100] = {
+  {D4,G4,FS4,G4,B4,A4,G4,A4,B4,A4,G4,G4,B4,D5,E5,0,E5,D5,B4,B4,G4,A4,G4,A4,B4,A4,G4,E4,E4,D4,G4,0,E5,D5,B4,B4,G4,A4,G4,A4,E5,D5,B4,B4,D5,E5,0,E5,D5,B4,B4,G4,A4,G4,A4,B4,A4,G4,E4,E4,D4,G4}, // Auld Lang Syne
+  {E4,A4,C5,B4,A4,E5,D5,B4,A4,C5,B4,G4,AS4,E4,E4,A4,C5,B4,A4,E5,G5,FS5,F5,CS5,F5,E5,DS5,DS4,C5,A4,C5}, // Harry Potter
+  {AS4,D5,C5,D5,G4,0,DS5,D5,DS5,D5,C5,0,DS5,D5,DS5,G4,0,C5,AS4,C5,AS4,A4,C5,AS4,D5,C5,D5,G4,0,DS5,D5,DS5,D5,C5,0,DS5,D5,DS5,G4,0,C5,AS4,C5,AS4,A4,C5,AS4,A4,AS4,C5,AS4,C5,D5,C5,AS4,A4,G4,DS5,D5,D5,D5,DS5,D5,C5,D5}, // Final countdown
+  {D4,F4,D5,D4,F4,D5,E5,F5,E5,F5,E5,C5,A4,A4,D4,F4,G4,A4,A4,D4,F4,G4,E4}, // Song of storms
+  {C4,G4,F4,E4,D4,C5,G4,F4,E4,D4,C5,G4,F4,E4,F4,D4}, // Star wars
+  {F4,A4,B4,F4,A4,B4,F4,A4,B4,E5,D5,B4,C5,B4,G4,E4,D4,E4,G4,E4}, // Lost woods
+  {C2, F3, C3, A2, C3, F3, C3, C3, F3, C3, F3, AS3, G3, F3, E3, D3, CS3, C3, F3, C3, A2, C3, F3, C3, AS3, 0, G3, F3, E3, D3, CS3, C3 }, // Jeopardy
+  {C4, D4, F4, D4, A4, 0, A4, G4, 0, C4, D4, F4, D4, G4, 0, G4, F4, 0 } // Rick Roll
 };
 
 // Note Durations
 // Notation: quarter note  = 4
-const byte noteDurations[][20] = { // This is the duration to play each note. 1 = whole note, 2 = half note, 4 = quater note, etc.
-  //{3,3,8,4,4,4,8,4,8,8,4,8,4,4,2,4,4,4,8,4,4,4,8,4,8,8,4,8,4,4,2,4,4,4,8,4,4,4,8,4,4,4,8,4,4,2,4,4,4,8,4,4,4,8,4,8,8,4,8,4,4,1}, // Auld Lang Syne
-  //{4,4,4,4,2,4,1.5,1.5,4,4,4,2,4,1.5,4,4,4,4,2,4,2,4,2,4,4,4,4,2,4,1}, // Harry Potter
-  //{4,16,16,4,4,4,16,16,8,8,4,4,16,16,4,4,4,16,16,8,8,8,8,4,16,16,4,4,4,16,16,8,8,4,4,16,16,4,4,4,16,16,8,8,8,8,4,16,16,4,16,16,8,8,8,8,4,4,4,8,8,4,16,16,1}, // Final countdown
-  //{5,5,2,5,5,2,3,8,8,8,8,8,2,4,4,8,8,2,4,4,8,8,2}, // Song of storms
-  //{2,2,4,4,4,2,2,4,4,4,2,2,4,4,4,1}, // Star wars
-  //{4,4,2,4,4,2,4,4,4,4,2,4,4,4,4,1,4,4,4,1}, // Lost woods
-  //{4,4,4,4,4,4,2,4,4,4,4,3,8,8,8,8,8,4,4,4,4,4,4,2,4,8,8,4,4,4,4,4,4,0}, // Jeopardy
+const byte noteDurations[][100] = { // This is the duration to play each note. 1 = whole note, 2 = half note, 4 = quater note, etc.
+  {3,3,8,4,4,4,8,4,8,8,4,8,4,4,2,4,4,4,8,4,4,4,8,4,8,8,4,8,4,4,2,4,4,4,8,4,4,4,8,4,4,4,8,4,4,2,4,4,4,8,4,4,4,8,4,8,8,4,8,4,4,1}, // Auld Lang Syne
+  {4,4,4,4,2,4,1.5,1.5,4,4,4,2,4,1.5,4,4,4,4,2,4,2,4,2,4,4,4,4,2,4,1}, // Harry Potter
+  {4,16,16,4,4,4,16,16,8,8,4,4,16,16,4,4,4,16,16,8,8,8,8,4,16,16,4,4,4,16,16,8,8,4,4,16,16,4,4,4,16,16,8,8,8,8,4,16,16,4,16,16,8,8,8,8,4,4,4,8,8,4,16,16,1}, // Final countdown
+  {5,5,2,5,5,2,3,8,8,8,8,8,2,4,4,8,8,2,4,4,8,8,2}, // Song of storms
+  {2,2,4,4,4,2,2,4,4,4,2,2,4,4,4,1}, // Star wars
+  {4,4,2,4,4,2,4,4,4,4,2,4,4,4,4,1,4,4,4,1}, // Lost woods
+  {4,4,4,4,4,4,2,4,4,4,4,3,8,8,8,8,8,4,4,4,4,4,4,2,4,8,8,4,4,4,4,4,4,0}, // Jeopardy
   {4,4,4,4,4,4,1,1,2,4,4,4,4,4,4,1,1,2}, // Rick Roll
 };
 

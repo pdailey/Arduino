@@ -4,7 +4,9 @@
    ============================================================================================
 */
 
-
+// TODO
+// Music plays softer with voltage divider
+// Add songs as array of cr
 
 
 /* ============================================================================
@@ -19,7 +21,6 @@ bool debugFlag = 0;
 
 // RoraryEncoder for pins A2 and A3:
 RotaryEncoder encoder(A2, A3);
-
 
 // Push button on encoder
 const byte BUTTON_PIN = 2;
@@ -47,12 +48,22 @@ Led leds[numberOfLeds] = {
   Led(13),
 };
 
+// Music
+int m1 [] = {};
+int m2 [] = {};
+int m3 [] = {};
+
+int* melodies[] = {m1, m2, m3};
+
+
 // State Variables
 bool invert_leds = false;
 bool update_position = true;
 
 // Serial Communication Variables
 const unsigned int BAUD = 57600;
+
+
 
 
 /* ============================================================================
@@ -79,36 +90,32 @@ void loop() {
   encoder.tick();
   button.read();
 
+  // update encoder position
+  int newPos = encoder.getPosition();
+
+  if (pos != newPos) {
+    pos = getEncoderPosition(pos, newPos);
+    //TODO updateLedPosition();
+  }
+
+
   // Button Logic
   if (button.wasReleased()) {
     invert_leds = !invert_leds;
+    //invertLeds();
+    
     Serial.println("TRIGGERED!!!");
   }
 
-  int newPos = encoder.getPosition();
-
-  // update position
-  if (pos != newPos) {
-    // Handle literal edge cases
-    if (newPos <= 0) {
-      encoder.setPosition(0);
-      newPos = 0;
-    } else if (newPos >= numberOfLeds - 1) {
-      encoder.setPosition(numberOfLeds - 1);
-      newPos = numberOfLeds - 1;
-    }
-
-    pos = newPos;
-  }
-
+ 
   if (invert_leds) {
     for (byte i = 0; i < numberOfLeds; i++)
       (i == pos) ? leds[i].off() : leds[i].on();
   } else {
+    // upddateLedPosition(leds, pos)
     for (byte i = 0; i < numberOfLeds; i++)
       (i == pos) ? leds[i].on() : leds[i].off();
   }
-
 
   if (debugFlag) {
     Serial.println(F("DEBUGGING:"));
@@ -120,3 +127,16 @@ void loop() {
    Function.
    ========================================================================================*/
 
+// Handle literal edge cases
+byte getEncoderPosition(int oldPos, int newPos) {
+  if (newPos <= 0) {
+    encoder.setPosition(0);
+    newPos = 0;
+  } else if (newPos >= numberOfLeds - 1) {
+    encoder.setPosition(numberOfLeds - 1);
+    newPos = numberOfLeds - 1;
+  }
+  oldPos = newPos;
+  
+  return oldPos;
+}
