@@ -22,8 +22,8 @@ RotaryEncoder encoder(A2, A3);
 
 
 // Push button on encoder
-const byte BUTTON_PIN = 2;       //Connect a tactile button switch (or something similar)
-//from Arduino pin 13 to ground.
+const byte BUTTON_PIN = 2;
+
 const bool PULLUP = true;        //To keep things simple, we use the Arduino's internal pullup resistor.
 const bool INVERT = true;        //Since the pullup resistor will keep the pin high unless the
 //switch is closed, this is negative logic, i.e. a high state
@@ -75,6 +75,7 @@ void setup() {
 void loop() {
   static int pos = 0;
 
+  // Check for changes in state
   encoder.tick();
   button.read();
 
@@ -84,10 +85,6 @@ void loop() {
     Serial.println("TRIGGERED!!!");
   }
 
-  //pos = getEncoderPosition()
-  
-  
-  // Encoder Logic
   int newPos = encoder.getPosition();
 
   // update position
@@ -100,7 +97,7 @@ void loop() {
       encoder.setPosition(numberOfLeds - 1);
       newPos = numberOfLeds - 1;
     }
-     
+
     pos = newPos;
   }
 
