@@ -12,10 +12,10 @@
 #include <RotaryEncoder.h>
 #include <Button.h>
 #include <NewTone.h>
-#include "NewPitches.h"
+#include "pitches.h"
 #include "Led.h"
 
-bool debugFlag = 0;
+bool debugFlag = true;
 
 //////////////////////////////////////
 // RoraryEncoder for pins A2 and A3:
@@ -23,7 +23,6 @@ RotaryEncoder encoder(A2, A3);
 
 // Push button on encoder
 const byte BUTTON_PIN = 2;
-
 const bool PULLUP = true;        //To keep things simple, we use the Arduino's internal pullup resistor.
 const bool INVERT = true;        //Since the pullup resistor will keep the pin high unless the
 //switch is closed, this is negative logic, i.e. a high state
@@ -48,6 +47,7 @@ Led leds[numberOfLeds] = {
   Led(13),
 };
 
+
 //////////////////////////////////////
 // Music
 const byte speakerPin =  9;
@@ -66,14 +66,14 @@ const byte tempoFactor = 10;
 
 // Melodies
 // This creates the melodies using NewPitch.h by setting the note frequency
-const int m0 [] = {D4, G4, FS4, G4, B4, A4, G4, A4, B4, A4, G4, G4, B4, D5, E5, 0, E5, D5, B4, B4, G4, A4, G4, A4, B4, A4, G4, E4, E4, D4, G4, 0, E5, D5, B4, B4, G4, A4, G4, A4, E5, D5, B4, B4, D5, E5, 0, E5, D5, B4, B4, G4, A4, G4, A4, B4, A4, G4, E4, E4, D4, G4}; // Auld Lang Syne
-const int m1 [] = {E4, A4, C5, B4, A4, E5, D5, B4, A4, C5, B4, G4, AS4, E4, E4, A4, C5, B4, A4, E5, G5, FS5, F5, CS5, F5, E5, DS5, DS4, C5, A4, C5}; // Harry Potter
-const int m2 [] = {AS4, D5, C5, D5, G4, 0, DS5, D5, DS5, D5, C5, 0, DS5, D5, DS5, G4, 0, C5, AS4, C5, AS4, A4, C5, AS4, D5, C5, D5, G4, 0, DS5, D5, DS5, D5, C5, 0, DS5, D5, DS5, G4, 0, C5, AS4, C5, AS4, A4, C5, AS4, A4, AS4, C5, AS4, C5, D5, C5, AS4, A4, G4, DS5, D5, D5, D5, DS5, D5, C5, D5}; // Final countdown
-const int m3 [] = {D4, F4, D5, D4, F4, D5, E5, F5, E5, F5, E5, C5, A4, A4, D4, F4, G4, A4, A4, D4, F4, G4, E4}; // Song of storms
-const int m4 [] = {C4, G4, F4, E4, D4, C5, G4, F4, E4, D4, C5, G4, F4, E4, F4, D4}; // Star wars
-const int m5 [] = {F4, A4, B4, F4, A4, B4, F4, A4, B4, E5, D5, B4, C5, B4, G4, E4, D4, E4, G4, E4}; // Lost woods
-const int m6 [] = {C2, F3, C3, A2, C3, F3, C3, C3, F3, C3, F3, AS3, G3, F3, E3, D3, CS3, C3, F3, C3, A2, C3, F3, C3, AS3, 0, G3, F3, E3, D3, CS3, C3 }; // Jeopardy
-const int m7 [] = {C4, D4, F4, D4, A4, 0, A4, G4, 0, C4, D4, F4, D4, G4, 0, G4, F4, 0 }; // Rick Roll
+const int m0 [] = {NOTE_D4, NOTE_G4, NOTE_FS4, NOTE_G4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_G4, NOTE_B4,  NOTE_D5, NOTE_E5, 0, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_B4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_E4, NOTE_E4, NOTE_D4, NOTE_G4, 0, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_B4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_B4, NOTE_D5, NOTE_E5, 0, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_B4, NOTE_G4, NOTE_A4, NOTE_G4, NOTE_A4, NOTE_B4, NOTE_A4, NOTE_G4, NOTE_E4, NOTE_E4, NOTE_D4, NOTE_G4}; // Auld Lang Syne
+const int m1 [] = {NOTE_E4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_G4, NOTE_AS4, NOTE_E4, NOTE_E4, NOTE_A4, NOTE_C5, NOTE_B4, NOTE_A4, NOTE_E5, NOTE_G5, NOTE_FS5, NOTE_F5, NOTE_CS5, NOTE_F5, NOTE_E5, NOTE_DS5, NOTE_DS4, NOTE_C5, NOTE_A4, NOTE_C5}; // Harry Potte/AS
+const int m2 [] = {NOTE_AS4, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_G4, 0, NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_D5, NOTE_C5, 0, NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_G4, 0, NOTE_C5, NOTE_AS4, NOTE_C5, NOTE_AS4, NOTE_A4, NOTE_C5, NOTE_AS4, NOTE_D5, NOTE_C5, NOTE_D5, NOTE_G4, 0, NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_D5, NOTE_C5, 0, NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_G4, 0, NOTE_C5, NOTE_AS4, NOTE_C5, NOTE_AS4, NOTE_A4, NOTE_C5, NOTE_AS4, NOTE_A4, NOTE_AS4, NOTE_C5, NOTE_AS4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_AS4, NOTE_A4, NOTE_G4, NOTE_DS5, NOTE_D5, NOTE_D5, NOTE_D5, NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_D5}; // Final countdown
+const int m3 [] = {NOTE_D4, NOTE_F4, NOTE_D5, NOTE_D4, NOTE_F4, NOTE_D5, NOTE_E5, NOTE_F5, NOTE_E5, NOTE_F5, NOTE_E5, NOTE_C5, NOTE_A4, NOTE_A4, NOTE_D4, NOTE_F4, NOTE_G4, NOTE_A4, NOTE_A4, NOTE_D4, NOTE_F4, NOTE_G4, NOTE_E4}; // Song of storms
+const int m4 [] = {NOTE_C4, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C5, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_D4, NOTE_C5, NOTE_G4, NOTE_F4, NOTE_E4, NOTE_F4, NOTE_D4}; // Star wars
+const int m5 [] = {NOTE_F4, NOTE_A4, NOTE_B4, NOTE_F4, NOTE_A4, NOTE_B4, NOTE_F4, NOTE_A4, NOTE_B4, NOTE_E5, NOTE_D5, NOTE_B4, NOTE_C5, NOTE_B4, NOTE_G4, NOTE_E4, NOTE_D4, NOTE_E4, NOTE_G4, NOTE_E4}; // Lost woods
+const int m6 [] = {NOTE_C2, NOTE_F3, NOTE_C3, NOTE_A2, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_F3, NOTE_AS3, NOTE_G3, NOTE_F3, NOTE_E3, NOTE_D3, NOTE_CS3, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_A2, NOTE_C3, NOTE_F3, NOTE_C3, NOTE_AS3, 0, NOTE_G3, NOTE_F3, NOTE_E3, NOTE_D3, NOTE_CS3, NOTE_C3 }; // Jeopardy
+const int m7 [] = {NOTE_C4, NOTE_D4, NOTE_F4, NOTE_D4, NOTE_A4,       0, NOTE_A4, NOTE_G4,       0, NOTE_C4, NOTE_D4, NOTE_F4, NOTE_D4, NOTE_G4, 0, NOTE_G4, NOTE_F4, 0 }; // Rick Roll
 const int* melodies[] = {m0, m1, m2, m3, m4, m5, m6, m7};
 
 
@@ -91,13 +91,15 @@ const byte* noteDurations[] = {d0, d1, d2, d3, d4, d5, d6, d7};
 
 const byte totalNotes[] = {62, 30, 65, 23, 16, 20, 34, 18};
 
+
 //////////////////////////////////////
 // State Variables
 bool invert_leds = false;
 bool update_position = true;
 byte thisSong = 0;
-boolean play_melody = false;
-boolean repeat_melody = false;
+int thisNote = 0;
+bool play_melody = false;
+bool repeat_melody = false;
 
 // Serial Communication Variables
 const unsigned int BAUD = 57600;
@@ -133,10 +135,14 @@ void loop() {
   if (pos != newPos) {
     pos = getEncoderPosition(pos, newPos);
     //TODO updateLedPosition();
-    if (pos < sizeof(melodies)) {
+
+    //TODO updateLedPosition();
+    if (pos < sizeof(melodies) && thisSong != pos) {
       thisSong = pos;
+      thisNote = 0;
     }
   }
+
 
   // Button Logic
   if (button.wasReleased()) {
@@ -186,8 +192,6 @@ byte getEncoderPosition(int oldPos, int newPos) {
    Changes the note played according to Plays a melody one time through
 */
 void updateMelody() {
-  static int thisNote = 0;
-
   // Is the song still going?
   if (thisNote < totalNotes[thisSong]) {
     unsigned long nowMs = millis();

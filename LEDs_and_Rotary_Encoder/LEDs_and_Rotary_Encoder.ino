@@ -24,7 +24,6 @@ RotaryEncoder encoder(A2, A3);
 
 // Push button on encoder
 const byte BUTTON_PIN = 2;
-
 const bool PULLUP = true;        //To keep things simple, we use the Arduino's internal pullup resistor.
 const bool INVERT = true;        //Since the pullup resistor will keep the pin high unless the
 //switch is closed, this is negative logic, i.e. a high state
@@ -47,14 +46,6 @@ Led leds[numberOfLeds] = {
   Led(12),
   Led(13),
 };
-
-// Music
-int m1 [] = {};
-int m2 [] = {};
-int m3 [] = {};
-
-int* melodies[] = {m1, m2, m3};
-
 
 // State Variables
 bool invert_leds = false;
