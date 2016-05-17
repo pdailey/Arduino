@@ -105,21 +105,11 @@ void loop() {
   }
 
   if (invert_leds) {
-    for (int i = 0; i < numberOfLeds; i++) {
-      if (i == pos) {
-        leds[i].off();
-      } else {
-        leds[i].on();
-      }
-    }
+    for (byte i = 0; i < numberOfLeds; i++)
+      (i == pos) ? leds[i].off() : leds[i].on();
   } else {
-    for (int i = 0; i < numberOfLeds; i++) {
-      if (i == pos) {
-        leds[i].on();
-      } else {
-        leds[i].off();
-      }
-    }
+    for (byte i = 0; i < numberOfLeds; i++)
+      (i == pos) ? leds[i].on() : leds[i].off();
   }
 
 
