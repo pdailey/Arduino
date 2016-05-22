@@ -112,14 +112,15 @@ Button pulse_line(PULSE_PIN, PULLUP, INVERT, DEBOUNCE_MS); // Pulse Line
 const byte LED_PIN = 13;         // The standard "Pin 13" LED
 LedFlasher statusLED (LED_PIN, 500, 500); // SYNTAX: pin, off for mS, on for mS
 
+
 // State Variables
 boolean ledState = false;       // Keeps the current LED status
 boolean sdPresent = false;      // Was the SD properly enabled?
 boolean startLogging = false;   // Data logging occurs when true
 
 
-
 // File Name Variables
+// TODO: Change file name
 File file;
 String base_name = "log_";
 String file_name;
@@ -182,6 +183,9 @@ void loop() {
     while (Serial1.available () > 0){
       processIncomingByte (Serial1.read ());
     }
+
+    // Disable flashing on LED
+    digitalWrite(LED_PIN, HIGH);
   }
 
   // Flash the light if logging has not been triggers or the SD is not present
@@ -228,15 +232,15 @@ void createSaveFile(){
 
 
 /* =========================================================================================
- * Process a button press. A single button press starts data logging.
+ * Process a button press. A button press toggles data logging on and off.
  * ========================================================================================*/
 void buttonRoutine(){
-  startLogging = true;
+  startLogging = !startLogging;
+  
+  ledState = !ledState;
+  digitalWrite(LED_PIN, ledState);
 
   // DEBUGGING
-  //ledState = !ledState;
-  ledState = HIGH;
-  digitalWrite(LED_PIN, ledState);
   //Serial.println("Triggered! (button pressed)");
 }
 
@@ -245,7 +249,7 @@ void buttonRoutine(){
  * Process a pulse. A single pulse starts data logging.
  * ========================================================================================*/
 void pulseRoutine(){
-  startLogging = true;
+  buttonRoutine();
 
   // DEBUGGING
   //Serial.println("Pulsed! (pulse recieved)");
