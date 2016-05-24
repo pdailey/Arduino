@@ -266,7 +266,7 @@ void processIncomingByte (const byte inByte){
   static char input_line[MAX_INPUT];
   static unsigned int input_pos = 0;
   switch (inByte){
-    case '\n':   // end of text
+    case 's':   // beginning of text
       input_line[input_pos] = 0;  // terminating null byte
 
       // terminator reached! process input_line here ...
@@ -291,14 +291,14 @@ void processIncomingByte (const byte inByte){
  * ========================================================================================*/
 void writeDataToSD(const char * data) {
   // DEBUGGING
-  //Serial.println(data);
+  Serial.println(data, HEX);
 
   file = SD.open(file_name, FILE_WRITE);
 
   // If file successfully opened, write data and send a timing pulse
   if (file) {
     //sdPresent = true;
-    file.println(data);
+    file.write(data);
     file.close();
   } else {
     sdPresent = false;
