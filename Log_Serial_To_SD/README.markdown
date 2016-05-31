@@ -72,7 +72,7 @@ After the battery is plugged in, a red light on the Arduino will begin flashing.
 At the end of testing, press the button to enter standby mode, and remove the battery. The Arduino and connected sensors will shut down.
 
 ## Retrieving Data
-Retrieving data from the Arduino for processing is simple. Remove the SD card and connect it to a computer. The SD will contain files named `IMU_#.csv`. A new file is created every time the Arduino enters Standby Mode, starting with `IMU_0.csv`.
+Retrieving data from the Arduino for processing is simple. Remove the SD card and connect it to a computer. The SD will contain files named `#_IMU.CSV`. A new file is created every time the Arduino enters Standby Mode, starting with `0_IMU.CSV`.
 
 # TODO
 - Make battery switch external
