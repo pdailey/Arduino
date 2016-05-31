@@ -123,9 +123,8 @@ bool startLogging = false;   // Data logging occurs when true
 // File Name Variables
 // TODO: Change file name
 File file;
-String base_name = "imu_";
+String base_name = "_imu";
 String file_name;
-const int MAX_FILES = 1000;
 
 
 // Serial Communication Variables
@@ -217,9 +216,14 @@ bool initializeSDCard() {
    Look for files already on the SD card to prevent naming collisions.
    ========================================================================================*/
 void createSaveFile() {
-  for (int i = 1; i < MAX_FILES; i++) {
-    file_name = base_name + i + ".csv";
+  // make i static so it is maintained between calls to function.
+  static int i;
+  
+  while(true) {
+    file_name = i + base_name + ".csv";
+    
     if (SD.exists(file_name)) { //check if file name already exists
+      i++;
       Serial.print(file_name);
       Serial.println(" exists.");
     } else {  // write to file
@@ -229,6 +233,7 @@ void createSaveFile() {
       file.close();
       break;
     }
+    
   }
 }
 
