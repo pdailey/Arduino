@@ -21,8 +21,13 @@ String input_str = "";
 
 
 void setup() {
-  Serial.begin(9600);
   servo.attach(servo_pin);
+
+  // Arduino will not run without USB Serial connected
+  Serial.begin(9600);
+  while (!Serial) { ; }
+
+  Serial.println("Enter a number to set the servo's position [0-180]:");
 }
 
 
@@ -30,8 +35,6 @@ void loop() {
   // Read serial input:
   while (Serial.available() > 0) {
     position = read_int_from_serial();
-    Serial.print("Position/Value:");
-    Serial.println(position);
   }
 
   // Set the servo to the requested position
@@ -55,6 +58,8 @@ int read_int_from_serial(){
     if (input_char == '\n') {
       position = input_str.toInt();
       input_str = "";
+      Serial.print("Position: ");
+      Serial.println(position);
     }
 
     return position;
