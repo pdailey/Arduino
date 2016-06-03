@@ -10,9 +10,9 @@ const byte c_servo_pin = 10;
 //0 a b c d e f g
 //1 h i j k l m n
 //2 o p q r s t u
-//3 v w x y z _ ! 
+//3 v w x y z _ !
 
-//                0         1         2       
+//                0         1         2
 //                012345678901234567890123456789
 char *keyboard = "abcdefghijklmnopqrstuvwxyz !";
 
