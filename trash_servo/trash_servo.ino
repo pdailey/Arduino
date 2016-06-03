@@ -44,7 +44,8 @@ void loop() {
 void print_with_servo(char str[]) {
   for (byte i = 0; i < strlen(str); i++) {
     char c = str[i];
-    get_row_col_char(c, row, col);
+    int index = find_index_of_char(c, keyboard);
+    get_row_col_from_index(index, row, col);
     set_servo_position(row, col);
 
     if(DEBUGGING){
@@ -59,13 +60,13 @@ void print_with_servo(char str[]) {
   }
 }
 
-void get_row_col_char(char target, byte &row, byte &col) {
-  int index;
-
+int find_index_of_char(char target, char* str){
   // look for the location of the character in the keyboard string
-  const char *result = strchr(keyboard, target);
-  index = (int)(result - keyboard);
-  
+  const char *result = strchr(str, target);
+  return (int)(result - str);
+}
+
+void get_row_col_from_index(int index, byte &row, byte &col) {
   // Map letter to keyboard layout
   col = index % 7;
   row = index / 7;
