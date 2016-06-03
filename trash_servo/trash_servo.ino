@@ -25,6 +25,8 @@ byte col = 0;
 // String to write
 char str[] = "mitch is trash! ";
 
+bool DEBUGGING = true;
+
 void setup() {
   Serial.begin(9600);
 
@@ -44,6 +46,15 @@ void print_with_servo(char str[]) {
     char c = str[i];
     get_row_col_char(c, row, col);
     set_servo_position(row, col);
+
+    if(DEBUGGING){
+      Serial.print(c);
+      Serial.print(": ");
+      Serial.print(col);
+      Serial.print(", ");
+      Serial.println(row);
+    }
+
     delay(2000);
   }
 }
@@ -58,11 +69,6 @@ void get_row_col_char(char target, byte &row, byte &col) {
   // Map letter to keyboard layout
   col = index % 7;
   row = index / 7;
-
-  Serial.print(target);
-  Serial.print(row);
-  Serial.print(", ");
-  Serial.println(col);
 }
 
 void set_servo_position(byte row, byte col) {
