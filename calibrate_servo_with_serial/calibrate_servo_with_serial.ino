@@ -1,3 +1,16 @@
+/*
+ * Calibrate Servo with Serial
+ *
+ * Allows servos to be calibrated through serial communication. Numbers are read
+ * from serial, and if they are within a valid range, the servo's position is set
+ * to the specified number. This position is held until another number is entered.
+ *
+ */
+
+  Uses Arduino's standard servo library.
+
+ */
+
 #include <Servo.h>
 
 Servo servo;
