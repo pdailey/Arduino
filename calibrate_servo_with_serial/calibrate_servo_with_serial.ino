@@ -23,7 +23,7 @@ void loop() {
   }
 
   // Set the servo to the requested position
-  if(position > 0 && position < 180){
+  if(position >= 0 && position <= 180){
     servo.write(position);
   }
 }
