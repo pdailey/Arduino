@@ -23,7 +23,10 @@ byte row = 0;
 byte col = 0;
 
 // String to write
-char str[] = "mitch is trash! ";
+//char str[] = "mitch is trash! ";
+char str1[] = "try harder";
+char str2[] = "weak";
+char str3[] = "some days you win some days you are mitch";
 
 bool DEBUGGING = true;
 
@@ -35,7 +38,11 @@ void setup() {
 }
 
 void loop() {
-  print_with_servo(str);
+  print_with_servo(str1);
+  delay(5000);
+  print_with_servo(str2);
+  delay(5000);
+  print_with_servo(str3);
   delay(5000);
 }
 
