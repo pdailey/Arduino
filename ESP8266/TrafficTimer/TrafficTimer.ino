@@ -92,7 +92,7 @@ void init7Segment() {
 
 // Open connection to the HTTP server
 bool connect(const char* hostName) {
-  Serial.print("Connect to ");
+  Serial.print("Connecting to ");
   Serial.println(hostName);
 
   // bool ok = client.connect(hostName, 80);
@@ -213,22 +213,24 @@ void printDuration(int duration) {
   Serial.println(duration);
 }
 
+// Display the current commute time on the 7-segment display
 void displayDuration(int duration) {
   uint16_t blinkcounter = 0;
   boolean drawDots = false;
+  
   // duration is given in seconds, we want to display hrs:min
   matrix.writeDigitNum(0, 0, drawDots);
   matrix.writeDigitNum(1, (duration / 3600), drawDots);
-  // TODO: Blink!
- 
   matrix.writeDigitNum(3, (duration / 60) / 10, drawDots);
   matrix.writeDigitNum(4, (duration / 60) % 10, drawDots);
+
+  // Update
   matrix.writeDisplay();
 }
 
 // Close the connection with the HTTP server
 void disconnect() {
-  Serial.println("Disconnect");
+  Serial.println("Disconnecting");
   client.stop();
 }
 
