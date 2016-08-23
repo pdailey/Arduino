@@ -19,6 +19,12 @@ Atm_Relay& Atm_Relay::begin(int pin_c1, int pin_c2, int pin_h1, int pin_h2) {
   this->pin_c2 = pin_c2;
   this->pin_h1 = pin_h1;  
   this->pin_h2 = pin_h2;
+  
+  digitalWrite( pin_c1, RELAY_OFF ); // Set the pin modes
+  digitalWrite( pin_c2, RELAY_OFF );
+  digitalWrite( pin_h1, RELAY_OFF );
+  digitalWrite( pin_h2, RELAY_OFF );
+  
   pinMode( pin_c1, OUTPUT ); // Set the pin modes
   pinMode( pin_c2, OUTPUT );
   pinMode( pin_h1, OUTPUT );
