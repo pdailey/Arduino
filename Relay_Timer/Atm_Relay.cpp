@@ -3,6 +3,8 @@
 /* Add optional parameters for the state machine to begin()
  * Add extra initialization code
  */
+#define RELAY_ON 0
+#define RELAY_OFF 1
 
 Atm_Relay& Atm_Relay::begin(int pin_c1, int pin_c2, int pin_h1, int pin_h2) {
   // clang-format off
@@ -21,6 +23,8 @@ Atm_Relay& Atm_Relay::begin(int pin_c1, int pin_c2, int pin_h1, int pin_h2) {
   pinMode( pin_c2, OUTPUT );
   pinMode( pin_h1, OUTPUT );
   pinMode( pin_h2, OUTPUT );
+
+  
   timer_h.set( -1 ); // Initialize the timers
   timer_c.set( -1 );
   return *this;          
@@ -50,22 +54,22 @@ int Atm_Relay::event( int id ) {
 void Atm_Relay::action( int id ) {
   switch ( id ) {
     case ENT_COOL:
-      digitalWrite( pin_c1, HIGH );
-      digitalWrite( pin_c2, HIGH );
+      digitalWrite( pin_c1, RELAY_ON );
+      digitalWrite( pin_c2, RELAY_ON );
       push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
     case EXT_COOL:
-      digitalWrite( pin_c1, LOW );
-      digitalWrite( pin_c2, LOW );
+      digitalWrite( pin_c1, RELAY_OFF);
+      digitalWrite( pin_c2, RELAY_OFF );
       return;
     case ENT_HEAT:
-      digitalWrite( pin_h1, HIGH );
-      digitalWrite( pin_h2, HIGH );
+      digitalWrite( pin_h1, RELAY_ON );
+      digitalWrite( pin_h2, RELAY_ON );
       push( connectors, ON_CHANGE, 0, 1, 0 );
       return;
     case EXT_HEAT:
-      digitalWrite( pin_h1, LOW );
-      digitalWrite( pin_h2, LOW );
+      digitalWrite( pin_h1, RELAY_OFF );
+      digitalWrite( pin_h2, RELAY_OFF );
       return;
   }
 }
