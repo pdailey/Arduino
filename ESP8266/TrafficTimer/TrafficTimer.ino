@@ -14,7 +14,7 @@ const unsigned long HTTP_TIMEOUT = 10000;  // max respone time from server
 const size_t MAX_CONTENT_SIZE = 1024;       // max size of the HTTP response
 const char* SSID = "IOT";                   // insert your SSID
 const char* PASS = "20ElCapitan14";         // insert your password
-const char* server = "maps.googleapis.com";
+const char* google_server = "maps.googleapis.com";
 const char* home = "Wilmington+DE";
 const char* work = "Elk+Mills+MD";
 #define YOUR_KEY "AIzaSyCXMMVZ2ckFFsaA1XqGt0d_qfFfqFb1WvE" // API Key
@@ -37,12 +37,14 @@ void loop() {
   // Only check traffic time every 1 minutes, so you don't go over quota of requests (for free api license)
   if (millis() - WMillis >= 60000) {
     setDisplayToLoad();
-    if (connect(server)) {
+    // If sucessfully connected
+    if (connectHTTP(google_server)) { 
       if (sendRequest(server, home, work) && skipResponseHeaders()) {
         char response[MAX_CONTENT_SIZE];
         readReponseContent(response, sizeof(response));
 
-        if (parseDuration(response, duration)) {
+        // If message sucessfully parsed
+        if(parseDuration(response, duration)) { 
           printDuration(duration);
           displayDuration(duration);
         }
@@ -52,6 +54,9 @@ void loop() {
     // reset update counter
     WMillis = millis();
   }
+
+  // Update Time
+  
   // Write the display to show blicking of colon
   matrix.writeDisplay();
 }
@@ -59,9 +64,7 @@ void loop() {
 // Initialize Serial port
 void initSerial() {
   Serial.begin(BAUD_RATE);
-  while (!Serial) {
-    ;  // wait for serial port to initialize
-  }
+  while (!Serial) ;  // wait for serial port to initialize
   Serial.println("Serial ready");
 }
 
@@ -91,7 +94,7 @@ void init7Segment() {
 }
 
 // Open connection to the HTTP server
-bool connect(const char* hostName) {
+bool connectHTTP(const char* hostName) {
   Serial.print("Connecting to ");
   Serial.println(hostName);
 
@@ -124,11 +127,9 @@ bool sendRequest(const char* host, const char* origin, const char* dest) {
 // Skip HTTP headers so that we are at the beginning of the response's body
 bool skipResponseHeaders() {
   // HTTP headers end with an empty line
-  //char endOfHeaders[] = "\r\n\r\n";
+  // char endOfHeaders[] = "\r\n\r\n";
   // TODO: May change with changing locations!
   char endOfHeaders[] = "27a\r\n"; // modified to match the output from the google api
-
-  //return true;
 
   client.setTimeout(HTTP_TIMEOUT);
   bool ok = client.find(endOfHeaders);
@@ -143,9 +144,10 @@ bool skipResponseHeaders() {
 void readReponseContent(char* content, size_t maxSize) {
   size_t length = client.readBytes(content, maxSize);
   content[length] = 0;
-  Serial.println("Begin Response:");
-  Serial.println(content);
-  Serial.println("End Response");
+  // DEBUGGING
+  //Serial.println("Begin Response:");
+  //Serial.println(content);
+  //Serial.println("End Response");
 }
 
 
@@ -188,21 +190,6 @@ bool parseDuration(char* content, int& duration) {
     return false;
   }
 
-  /* Public shaming for how long it took to figure out the JSON format...
-     Also referece for printing the JSON tree directly
-    Serial.println();
-    root["rows"].printTo(Serial);
-    Serial.println();
-    root["rows"][0].printTo(Serial);
-    Serial.println();
-    root["rows"][0]["elements"].printTo(Serial);
-    Serial.println();
-    root["rows"][0]["elements"][0].printTo(Serial);
-    Serial.println();
-    root["rows"][0]["elements"][0]["duration"].printTo(Serial);
-    Serial.println();
-    root["rows"][0]["elements"][0]["duration"]["value"].printTo(Serial);
-    Serial.println(); */
   duration = root["rows"][0]["elements"][0]["duration_in_traffic"]["value"];
   return true;
 }
