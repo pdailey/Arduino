@@ -3,31 +3,24 @@
 
 
 void setup() {
-  // put your setup code here, to run once:
+  const byte pin [] = [9, 10, 11, 12];
+  const byte no_pins = 4;
 
-  pinMode(9, OUTPUT); // Set the pin modes
-  pinMode(10, OUTPUT);
-  pinMode(11, OUTPUT);
-  pinMode(12, OUTPUT);
-
-  digitalWrite(9, RELAY_OFF); // Set the pin modes
-  digitalWrite(10, RELAY_OFF);
-  digitalWrite(11, RELAY_OFF);
-  digitalWrite(12, RELAY_OFF);
+  for(int i = 0; i < no_pins; i++){
+    pinMode(pin[i], OUTPUT); // Set the pin modes
+    digitalWrite(pin[i], RELAY_OFF); // Set the pin modes
+  }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  digitalWrite(9, RELAY_ON);
-  delay(10000);
-  digitalWrite(10, RELAY_ON );
-  delay(10000);
-  digitalWrite(11, RELAY_ON );
-  delay(10000);
-  digitalWrite(12, RELAY_ON );
-  delay(10000);
-  digitalWrite(9, RELAY_OFF);
-  digitalWrite(10, RELAY_OFF);
-  digitalWrite(11, RELAY_OFF);
-  digitalWrite(12, RELAY_OFF);
+  // Turn relays ON
+  for(int i = 0; i < no_pins; i++){
+    digitalWrite(pin[i], RELAY_ON); // Set the pin modes
+    delay(10000);
+  }
+  // Turn relays OFF
+  for(int i = 0; i < no_pins; i++){
+    digitalWrite(pin[i], RELAY_OFF); // Set the pin modes
+    delay(10000);
+  }
 }
