@@ -23,7 +23,7 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  unsigned int count = 30000;  //Variable to store in EEPROM.
+  unsigned int count = 0;  //Variable to store in EEPROM.
   int eeAddress = 0;   //Location we want the data to be put.
 
 
