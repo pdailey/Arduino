@@ -18,18 +18,18 @@ Atm_Relay& Atm_Relay::begin(int * pins) {
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
-  this->p1 = pins[0]; // Save the pins
-  this->p2 = pins[1];
-  this->p3 = pins[2];
-  this->p4 = pins[3];
-  pinMode( p1, OUTPUT ); // Set the pin modes
-  pinMode( p2, OUTPUT );
-  pinMode( p3, OUTPUT );
-  pinMode( p4, OUTPUT );
-  digitalWrite( p1, RELAY_OFF ); 
-  digitalWrite( p2, RELAY_OFF );
-  digitalWrite( p3, RELAY_OFF );
-  digitalWrite( p4, RELAY_OFF );
+  this->cold_bath = pins[0]; // Save the pins
+  this->hot_bath = pins[1];
+  this->inlet = pins[2];
+  this->outlet = pins[3];
+  pinMode( cold_bath, OUTPUT ); // Set the pin modes
+  pinMode( hot_bath, OUTPUT );
+  pinMode( inlet, OUTPUT );
+  pinMode( outlet, OUTPUT );
+  digitalWrite( cold_bath, RELAY_OFF );
+  digitalWrite( hot_bath, RELAY_OFF );
+  digitalWrite( inlet, RELAY_OFF );
+  digitalWrite( outlet, RELAY_OFF );
   timer_h.set( -1 ); // set the timers
   timer_c.set( -1 );
   return *this;
@@ -59,35 +59,33 @@ int Atm_Relay::event( int id ) {
 void Atm_Relay::action( int id ) {
   switch ( id ) {
     case ENT_HOLD:
-      digitalWrite( p1, RELAY_OFF );
+      digitalWrite( cold_bath, RELAY_OFF );
       delay(VALVE_DELAY);
-      digitalWrite( p2, RELAY_OFF );
+      digitalWrite( hot_bath, RELAY_OFF );
       delay(VALVE_DELAY);
-      digitalWrite( p3, RELAY_OFF );
+      digitalWrite( inlet, RELAY_OFF );
       delay(VALVE_DELAY);
-      digitalWrite( p4, RELAY_OFF );
+      digitalWrite( outlet, RELAY_OFF );
       push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
-      
+
     case ENT_HEAT:
-      digitalWrite( p1, RELAY_ON );
+      digitalWrite( hot_bath, RELAY_ON );
       delay(VALVE_DELAY);
-      digitalWrite( p2, RELAY_OFF );
+      digitalWrite( inlet, RELAY_ON );
+      digitalWrite( outlet, RELAY_ON );
       delay(VALVE_DELAY);
-      digitalWrite( p3, RELAY_OFF );
-      delay(VALVE_DELAY);
-      digitalWrite( p4, RELAY_OFF );
+      digitalWrite( cold_bath, RELAY_OFF );
       push( connectors, ON_CHANGE, 0, 1, 0 );
       return;
-      
+
     case ENT_COOL:
-      digitalWrite( p1, RELAY_OFF );
+      digitalWrite( cold_bath, RELAY_ON );
       delay(VALVE_DELAY);
-      digitalWrite( p2, RELAY_ON );
+      digitalWrite( inlet, RELAY_OFF );
+      digitalWrite( outlet, RELAY_OFF );
       delay(VALVE_DELAY);
-      digitalWrite( p3, RELAY_ON );
-      delay(VALVE_DELAY);
-      digitalWrite( p4, RELAY_ON );
+      digitalWrite( hot_bath, RELAY_OFF );
       push( connectors, ON_CHANGE, 0, 2, 0 );
       return;
   }
