@@ -21,7 +21,7 @@ Atm_Menu & Atm_Menu::begin( void )
     /* ACT11 */  "CB? HB? IN? OUT?";
 
   menu( menu_definition, ACT00, ACT11, 4, 12 );
-  printXY(0,0, "SYS: ????  -----");
+  printXY(0,0, "SYS:????   ?????");
   printXY(0,1, "CB? HB? IN? OUT?");
   //updateDisplay();
   return *this;
@@ -43,10 +43,10 @@ void Atm_Menu::menu_action( int id )
           n += !digitalRead( relay_pins[i] );
         }
 
-        if      (n == 0) printXY( 5, 0, "HOLD");
-        else if (n == 3) printXY( 5, 0, "HEAT");
-        else if (n == 1) printXY( 5, 0, "COOL");
-        else             printXY( 5, 0, "ERR ");
+        if      (n == 0) printXY( 4, 0, "HOLD");
+        else if (n == 3) printXY( 4, 0, "HEAT");
+        else if (n == 1) printXY( 4, 0, "COOL");
+        else             printXY( 4, 0, "ERR ");
 
         //Bottom Screen:
         if ( pin.change( relay_pins[0] ) ) printXY(  2, 1, !digitalRead( relay_pins[0] ) ? "+" : " " );
@@ -65,10 +65,10 @@ void Atm_Menu::menu_action( int id )
           n += !digitalRead( relay_pins[i] );
         }
 
-        if      (n == 0) printXY( 5, 0, "HOLD");
-        else if (n == 3) printXY( 5, 0, "HEAT");
-        else if (n == 1) printXY( 5, 0, "COOL");
-        else             printXY( 5, 0, "ERR ");
+        if      (n == 0) printXY( 4, 0, "HOLD");
+        else if (n == 3) printXY( 4, 0, "HEAT");
+        else if (n == 1) printXY( 4, 0, "COOL");
+        else             printXY( 4, 0, "ERR ");
         
         // Bottom Screen:
         printXY(  2, 1, digitalRead( relay_pins[0] ) ? "+" : " " );
