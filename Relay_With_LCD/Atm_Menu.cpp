@@ -23,6 +23,7 @@ Atm_Menu & Atm_Menu::begin( void )
   menu( menu_definition, ACT00, ACT11, 4, 12 );
   printXY(0,0, "SYS: ????  -----");
   printXY(0,1, "CB? HB? IN? OUT?");
+  //updateDisplay();
   return *this;
   
 }
@@ -53,7 +54,7 @@ void Atm_Menu::menu_action( int id )
         if ( pin.change( relay_pins[2] ) ) printXY( 10, 1, !digitalRead( relay_pins[2] ) ? "+" : " " );
         if ( pin.change( relay_pins[3] ) ) printXY( 15, 1, !digitalRead( relay_pins[3] ) ? "+" : " " );
 
-        updateDisplay( 1 );
+        updateDisplay(4);
         return;
       }
     case ACT11 :
@@ -68,14 +69,14 @@ void Atm_Menu::menu_action( int id )
         else if (n == 3) printXY( 5, 0, "HEAT");
         else if (n == 1) printXY( 5, 0, "COOL");
         else             printXY( 5, 0, "ERR ");
-
+        
         // Bottom Screen:
         printXY(  2, 1, digitalRead( relay_pins[0] ) ? "+" : " " );
         printXY(  6, 1, digitalRead( relay_pins[1] ) ? "+" : " " );
         printXY( 10, 1, digitalRead( relay_pins[2] ) ? "+" : " " );
         printXY( 15, 1, digitalRead( relay_pins[3] ) ? "+" : " " );
-
-        updateDisplay( 1 );
+        updateDisplay(4);
+        
         return;
       }
   }
