@@ -14,7 +14,7 @@
 #include "Atm_Relay.h"
 
 // Basic Arduino sketch - instantiates the state machine and nothing else
-Atm_Relay Relay;
+Atm_Relay relay;
 
 // Time that the cycles will be on. Can handle 4,294,967,294 ms or ~50 Days
 const unsigned long min_cool = 5400000;
@@ -28,13 +28,15 @@ const byte heat_pin_4 = 12;
 
 void setup() {
   Serial.begin( 9600 );
-  // Display changes in state over serial
-  Relay.trace( Serial );
 
   // Assign the 4 pins to the relay
-  Relay.begin(heat_pin_1, heat_pin_2, heat_pin_3, heat_pin_4)
-    // Set the time of the cooling and heating cycle. Cooling cycle runs first
-    .automatic(min_cool, min_heat);
+  relay.begin(heat_pin_1, heat_pin_2, heat_pin_3, heat_pin_4)
+    // Trigger the heating cycle to run first
+    .trigger(relay.EVT_HEAT)
+     // Set the time of the cooling and heating cycle. Cooling cycle runs first
+    .automatic(min_cool, min_heat)
+     // Display changes in state over serial
+    .trace( Serial );
 }
 
 void loop() {
