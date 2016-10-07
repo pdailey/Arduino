@@ -2,6 +2,8 @@
 #include "Atm_Menu.h"
 #include "Atm_Relay.h"
 
+// TODO: Could be optimized, as no menu is needed....
+
 extern int relay_pins[4];
 
 Atm_Menu & Atm_Menu::begin( void )
