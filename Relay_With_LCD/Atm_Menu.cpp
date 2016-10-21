@@ -31,7 +31,7 @@ Atm_Menu & Atm_Menu::begin( void )
 }
 
 void Atm_Menu::menu_action( int id )
-{
+{ 
   switch ( id ) {
     case UPD:
       if ( updateDisplay(1) == 0 ) sleep(1);
@@ -39,12 +39,13 @@ void Atm_Menu::menu_action( int id )
 
     case ACT11L :
       {
-        //TOP Screen:
-        int n = 0;
+
+        // Top screen
+        byte n = 0;
         for (int i = 0; i < 4; i++) {
           n += !digitalRead( relay_pins[i] );
         }
-
+        
         if      (n == 0) printXY( 4, 0, "HOLD");
         else if (n == 3) printXY( 4, 0, "HEAT");
         else if (n == 1) printXY( 4, 0, "COOL");
@@ -55,8 +56,8 @@ void Atm_Menu::menu_action( int id )
         if ( pin.change( relay_pins[1] ) ) printXY(  6, 1, !digitalRead( relay_pins[1] ) ? "+" : " " );
         if ( pin.change( relay_pins[2] ) ) printXY( 10, 1, !digitalRead( relay_pins[2] ) ? "+" : " " );
         if ( pin.change( relay_pins[3] ) ) printXY( 15, 1, !digitalRead( relay_pins[3] ) ? "+" : " " );
-
         updateDisplay(4);
+        
         return;
       }
     case ACT11 :
@@ -77,8 +78,8 @@ void Atm_Menu::menu_action( int id )
         printXY(  6, 1, digitalRead( relay_pins[1] ) ? "+" : " " );
         printXY( 10, 1, digitalRead( relay_pins[2] ) ? "+" : " " );
         printXY( 15, 1, digitalRead( relay_pins[3] ) ? "+" : " " );
+
         updateDisplay(4);
-        
         return;
       }
   }
