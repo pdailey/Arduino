@@ -24,10 +24,10 @@ unsigned int count;   // Cycle count variable to store in EEPROM
 int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
-unsigned long ms_heat = 10000; // Duration of heating cycle in ms
-unsigned long ms_cool = 10000; // Duration of cooling cycle in ms
-
 // TODO: jump to ground for eprom
+unsigned long ms_heat = 11000; // Duration of heating cycle in ms
+unsigned long ms_cool = 11000; // Duration of cooling cycle in ms
+unsigned long ms_pulse = ms_cool-1000; // Duration the pulse monitor needs to see // FIX WORDING
 
 void update_display(int count){
   char cycles[5];
