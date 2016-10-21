@@ -66,9 +66,9 @@ void setup() {
   // triggers the counter after given number of ms in a certain state. relay_pin[1] only goes HIGH in a cooling cycle, 
   // which indicates that a heating cycle has also occured, thus the system has finished one complete heat/cool cycle and the cycle count needs to be updated.
   // When the counter is triggered, the count variable is updated, reflecting the number of cycles the test has undergone.
-  // Relay initially set to high on all pins, triggers our counter. As a result, the counter is initially off by one...
-  counter_pulse.begin( relay_pins[1], 10000)
-    .onChange(HIGH, update_cycle_counter);
+  // Relay initially set to high on all pins, triggers our counter.
+  counter_pulse.begin( relay_pins[0], ms_pulse)
+    .onChange(LOW, update_cycle_counter);
 
   // Button to cycle the system between hold, heating and cooling. 
   state_btn.begin(state_pin)
