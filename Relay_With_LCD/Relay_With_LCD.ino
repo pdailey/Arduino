@@ -24,7 +24,6 @@ unsigned int count;   // Cycle count variable to store in EEPROM
 int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
-// TODO: jump to ground for eprom
 unsigned long ms_heat = 11000; // Duration of heating cycle in ms
 unsigned long ms_cool = 11000; // Duration of cooling cycle in ms
 unsigned long ms_pulse = ms_cool-1000; // Duration the pulse monitor needs to see // FIX WORDING
@@ -86,12 +85,12 @@ void setup() {
   // Setup the LCD display. Single window display shows the state of the machine, which relays are on, and the cycle count. 
   lcd_display.begin();
   lcd_buttons.begin( lcd_display ); // Link the buttons to the display. TODO: likely unnecessary...
-  delay(1000);
   update_display(count);
   
   //delay(5000);
   // ...and fix the off-by-one error encountered on startup
-  count--;
+  //count--;
+  
 }
 
 void loop() {
