@@ -29,6 +29,11 @@ unsigned long ms_cool = 10000; // Duration of cooling cycle in ms
 
 // TODO: jump to ground for eprom
 
+void update_display(int count){
+  char cycles[5];
+  sprintf(cycles, "%05d", count);
+  lcd_display.printXY(11, 0, cycles);
+}
 
 void update_cycle_counter( int idx, int v, int up ) {
   count++;
@@ -39,21 +44,13 @@ void update_cycle_counter( int idx, int v, int up ) {
   if (count % 10 == 0) {
     EEPROM.put(address, count);
   }
-
-  // Update the display
-  char cycles[5];
-  sprintf(cycles, "%05d", count);
-  lcd_display.printXY(11, 0, cycles);
+  update_display(count);
 }
 
 void reset_cycle_counter( int idx, int v, int up ) {
   count = 0;
   EEPROM.put(address, count);
-
-  // Update the display
-  char cycles[5];
-  sprintf(cycles, "%05d", count);
-  lcd_display.printXY(11, 0, cycles);
+  update_display(count);
 }
 
 
@@ -90,6 +87,9 @@ void setup() {
   lcd_display.begin();
   lcd_buttons.begin( lcd_display ); // Link the buttons to the display. TODO: likely unnecessary...
   delay(1000);
+  update_display(count);
+  
+  //delay(5000);
   // ...and fix the off-by-one error encountered on startup
   count--;
 }
