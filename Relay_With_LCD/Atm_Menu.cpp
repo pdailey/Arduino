@@ -5,6 +5,7 @@
 // TODO: Could be optimized, as no menu is needed....
 
 extern int relay_pins[4];
+byte n = -1;
 
 Atm_Menu & Atm_Menu::begin( void )
 {
@@ -23,63 +24,57 @@ Atm_Menu & Atm_Menu::begin( void )
     /* ACT11 */  "CB? HB? IN? OUT?";
 
   menu( menu_definition, ACT00, ACT11, 4, 12 );
-  printXY(0,0, "SYS:????   ?????");
-  printXY(0,1, "CB? HB? IN? OUT?");
   //updateDisplay();
   return *this;
-  
+
 }
 
 void Atm_Menu::menu_action( int id )
-{ 
+{
   switch ( id ) {
-    case UPD:
-      if ( updateDisplay(1) == 0 ) sleep(1);
-      return;
-
     case ACT11L :
       {
-
         // Top screen
-        byte n = 0;
+        byte new_n = 0;
+
         for (int i = 0; i < 4; i++) {
-          n += !digitalRead( relay_pins[i] );
+          new_n += !digitalRead( relay_pins[i] );
         }
-        
-        if      (n == 0) printXY( 4, 0, "HOLD");
-        else if (n == 3) printXY( 4, 0, "HEAT");
-        else if (n == 1) printXY( 4, 0, "COOL");
-        else             printXY( 4, 0, "ERR ");
+
+        if (n != new_n) {
+          n = new_n;
+
+          clearDisplay();
+          // Don't change the count variable in the first row
+          printXY(0, 0, "SYS:       ");
+          printXY(0, 1, "CB  HB  IN  OUT ");
+          Serial.println(n);
+
+          if      (n == 0) printXY( 4, 0, "HOLD");
+          else if (n == 3) printXY( 4, 0, "HEAT");
+          else if (n == 1) printXY( 4, 0, "COOL");
+          else             printXY( 4, 0, "ERR ");
+          updateDisplay();
+        }
 
         //Bottom Screen:
-        if ( pin.change( relay_pins[0] ) ) printXY(  2, 1, !digitalRead( relay_pins[0] ) ? "+" : " " );
+  /*      if ( pin.change( relay_pins[0] ) ) printXY(  2, 1, !digitalRead( relay_pins[0] ) ? "+" : " " );
         if ( pin.change( relay_pins[1] ) ) printXY(  6, 1, !digitalRead( relay_pins[1] ) ? "+" : " " );
         if ( pin.change( relay_pins[2] ) ) printXY( 10, 1, !digitalRead( relay_pins[2] ) ? "+" : " " );
         if ( pin.change( relay_pins[3] ) ) printXY( 15, 1, !digitalRead( relay_pins[3] ) ? "+" : " " );
+*/
+        printXY(  2, 1, !digitalRead( relay_pins[0] ) ? "+" : " " );
+        printXY(  6, 1, !digitalRead( relay_pins[1] ) ? "+" : " " );
+        printXY( 10, 1, !digitalRead( relay_pins[2] ) ? "+" : " " );
+        printXY( 15, 1, !digitalRead( relay_pins[3] ) ? "+" : " " );
         updateDisplay(4);
-        
+
         return;
       }
+
+    //
     case ACT11 :
       {
-        // TOP Screen:
-        int n = 0;
-        for (int i = 0; i < 4; i++) {
-          n += !digitalRead( relay_pins[i] );
-        }
-
-        if      (n == 0) printXY( 4, 0, "HOLD");
-        else if (n == 3) printXY( 4, 0, "HEAT");
-        else if (n == 1) printXY( 4, 0, "COOL");
-        else             printXY( 4, 0, "ERR ");
-        
-        // Bottom Screen:
-        printXY(  2, 1, digitalRead( relay_pins[0] ) ? "+" : " " );
-        printXY(  6, 1, digitalRead( relay_pins[1] ) ? "+" : " " );
-        printXY( 10, 1, digitalRead( relay_pins[2] ) ? "+" : " " );
-        printXY( 15, 1, digitalRead( relay_pins[3] ) ? "+" : " " );
-
-        updateDisplay(4);
         return;
       }
   }

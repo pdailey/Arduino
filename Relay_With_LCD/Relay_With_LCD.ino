@@ -26,16 +26,26 @@ int address = 0;      // EEPROM address of count variable.
 // Timer Variables
 unsigned long ms_heat = 11000; // Duration of heating cycle in ms
 unsigned long ms_cool = 11000; // Duration of cooling cycle in ms
-unsigned long ms_pulse = ms_cool-1000; // Duration the pulse monitor needs to see // FIX WORDING
 
-void update_display(int count){
+// Button and trigger variables
+unsigned long ms_pulse = ms_cool-1000; // Duration system must be cooling before a cycle is triggered
+unsigned long ms_debounce = 500;       // Duration a button must be pressed before it is recognized
+
+void update_display_count(int count){
+  // reset cycle count in case of interference
+  lcd_display.printXY(11, 0, "-----");
+  lcd_display.updateDisplay(5);
+  
   char cycles[5];
   sprintf(cycles, "%05d", count);
   lcd_display.printXY(11, 0, cycles);
+  lcd_display.updateDisplay(5);
 }
 
 void update_cycle_counter( int idx, int v, int up ) {
   count++;
+
+
 
   // Write to EEPROM every 10 cycles. 
   // According to the manufacturer Atmel, the EEPROM is good for 100,000 write/erase cycles, 
@@ -43,13 +53,13 @@ void update_cycle_counter( int idx, int v, int up ) {
   if (count % 10 == 0) {
     EEPROM.put(address, count);
   }
-  update_display(count);
+  update_display_count(count);
 }
 
 void reset_cycle_counter( int idx, int v, int up ) {
   count = 0;
   EEPROM.put(address, count);
-  update_display(count);
+  update_display_count(count);
 }
 
 
@@ -68,10 +78,12 @@ void setup() {
 
   // Button to cycle the system between hold, heating and cooling. 
   state_btn.begin(state_pin)
+    .debounce( ms_debounce )
     .onPress( relay, relay.EVT_BUTTON );
 
   // Button to reset the number of cycles
   reset_btn.begin(reset_pin)
+    .debounce( ms_debounce )
     .onPress( reset_cycle_counter );
 
   // The relays set the states of the valves, thus the state of the system. 
@@ -85,12 +97,7 @@ void setup() {
   // Setup the LCD display. Single window display shows the state of the machine, which relays are on, and the cycle count. 
   lcd_display.begin();
   lcd_buttons.begin( lcd_display ); // Link the buttons to the display. TODO: likely unnecessary...
-  update_display(count);
-  
-  //delay(5000);
-  // ...and fix the off-by-one error encountered on startup
-  //count--;
-  
+  update_display_count(count);  
 }
 
 void loop() {

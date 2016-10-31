@@ -13,7 +13,7 @@ class Atm_Menu : public Automaton_Adafruit_RGBLCDShield_Display {
   // Machine states
   enum { OPT00, OPT10, OPT11 } STATES;
   // Menu actions
-  enum { ACT00, ACT10, ACT11, ACT11L, UPD } ACTIONS;
+  enum { ACT00, ACT10, ACT11, ACT11L } ACTIONS;
   atm_pin pin;
 
 
