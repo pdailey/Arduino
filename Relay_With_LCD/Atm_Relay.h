@@ -19,7 +19,7 @@ class Atm_Relay: public Machine {
   Atm_Relay& cool( void );
   Atm_Relay& hold( void );
   Atm_Relay& next( void );
-  Atm_Relay& automatic( int h, int c); 
+  Atm_Relay& automatic( unsigned long h, unsigned long c); 
 
  private:
   int cold_bath, hot_bath, inlet, outlet;

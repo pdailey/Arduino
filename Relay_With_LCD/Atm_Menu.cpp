@@ -48,7 +48,7 @@ void Atm_Menu::menu_action( int id )
           // Don't change the count variable in the first row
           printXY(0, 0, "SYS:       ");
           printXY(0, 1, "CB  HB  IN  OUT ");
-          Serial.println(n);
+          //Serial.println(n);
 
           if      (n == 0) printXY( 4, 0, "HOLD");
           else if (n == 3) printXY( 4, 0, "HEAT");

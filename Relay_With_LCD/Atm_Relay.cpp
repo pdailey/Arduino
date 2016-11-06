@@ -91,7 +91,7 @@ void Atm_Relay::action( int id ) {
   }
 }
 
-Atm_Relay& Atm_Relay::automatic( int h, int c) {
+Atm_Relay& Atm_Relay::automatic( unsigned long h, unsigned long c) {
   timer_h.set( h );
   timer_c.set( c );
   return *this;

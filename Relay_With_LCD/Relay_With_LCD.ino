@@ -21,15 +21,15 @@ int reset_pin = 12;
 // EEPROM Variables
 // EEPROM is memory whose values are kept when the board is turned off 
 unsigned int count;   // Cycle count variable to store in EEPROM
-int address = 0;      // EEPROM address of count variable.
+const int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
-unsigned long ms_heat = 11000; // Duration of heating cycle in ms
-unsigned long ms_cool = 11000; // Duration of cooling cycle in ms
+unsigned long ms_heat = 240000; // Duration of heating cycle in ms
+unsigned long ms_cool = 180000; // Duration of cooling cycle in ms
 
 // Button and trigger variables
-unsigned long ms_pulse = ms_cool-1000; // Duration system must be cooling before a cycle is triggered
-unsigned long ms_debounce = 500;       // Duration a button must be pressed before it is recognized
+const unsigned long ms_pulse = ms_cool-1000; // Duration system must be cooling before a cycle is triggered
+const unsigned long ms_debounce = 500;       // Duration a button must be pressed before it is recognized
 
 void update_display_count(int count){
   // reset cycle count in case of interference
