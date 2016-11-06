@@ -18,8 +18,8 @@ Atm_Relay relay;
 
 // Time that the cycles will be on. Can handle 4,294,967,294 ms or ~50 Days
 // time entered in ms
-const unsigned long min_cool = 3600000;
-const unsigned long min_heat = 900000;
+const unsigned long ms_cool = 5400000;
+const unsigned long ms_heat = 900000;
 
 // Pins atached to the relay
 const byte heat_pin_1 = 8;
@@ -37,7 +37,7 @@ void setup() {
     // Display changes in state over serial
     .trace( Serial );
     // Set the time of the cooling and heating cycle.
-    .automatic(min_cool, min_heat)
+    .automatic(ms_cool, ms_heat)
     // Trigger the heating cycle to run first
     .trigger(relay.EVT_HEAT)
 }
