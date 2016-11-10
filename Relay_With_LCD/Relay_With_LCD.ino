@@ -21,7 +21,7 @@ int reset_pin = 12;
 // EEPROM Variables
 // EEPROM is memory whose values are kept when the board is turned off 
 unsigned int count;   // Cycle count variable to store in EEPROM
-const int address = 0;      // EEPROM address of count variable.
+int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
 unsigned long ms_heat = 65000; // Duration of heating cycle in ms
