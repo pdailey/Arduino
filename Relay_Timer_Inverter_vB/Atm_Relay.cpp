@@ -6,7 +6,7 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-Atm_Relay& Atm_Relay::begin(int pin_c1, int pin_c2, int pin_h1, int pin_h2) {
+Atm_Relay& Atm_Relay::begin(int pin_h1, int pin_h2, int pin_h3, int pin_h4, int pin_h5, int pin_h6)  {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
     /*          ON_ENTER  ON_LOOP   ON_EXIT  EVT_HEAT  EVT_COOL  EVT_NEXT  EVT_TIMER_H  EVT_TIMER_C  ELSE */
@@ -15,28 +15,34 @@ Atm_Relay& Atm_Relay::begin(int pin_c1, int pin_c2, int pin_h1, int pin_h2) {
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
-  this->pin_c1 = pin_c1; // Save the pins
-  this->pin_c2 = pin_c2;
-  this->pin_h1 = pin_h1;  
+  this->pin_h1 = pin_h1; // Save the pins
   this->pin_h2 = pin_h2;
-  
-  digitalWrite( pin_c1, RELAY_OFF ); // Set the pin modes
-  digitalWrite( pin_c2, RELAY_OFF );
-  digitalWrite( pin_h1, RELAY_OFF );
-  digitalWrite( pin_h2, RELAY_OFF );
-  
-  pinMode( pin_c1, OUTPUT ); // Set the pin modes
-  pinMode( pin_c2, OUTPUT );
-  pinMode( pin_h1, OUTPUT );
-  pinMode( pin_h2, OUTPUT );
+  this->pin_h3 = pin_h3;
+  this->pin_h4 = pin_h4;
+  this->pin_h5 = pin_h5;
+  this->pin_h6 = pin_h6;
 
-  
+  digitalWrite( pin_h1, RELAY_OFF ); // Set the pin modes
+  digitalWrite( pin_h2, RELAY_OFF );
+  digitalWrite( pin_h3, RELAY_OFF );
+  digitalWrite( pin_h4, RELAY_OFF );
+  digitalWrite( pin_h5, RELAY_OFF );
+  digitalWrite( pin_h6, RELAY_OFF );
+
+  pinMode( pin_h1, OUTPUT ); // Set the pin modes
+  pinMode( pin_h2, OUTPUT );
+  pinMode( pin_h3, OUTPUT );
+  pinMode( pin_h4, OUTPUT );
+  pinMode( pin_h5, OUTPUT );
+  pinMode( pin_h6, OUTPUT );
+
+
   timer_h.set( -1 ); // Initialize the timers
   timer_c.set( -1 );
-  return *this;          
+  return *this;
 }
 
-/* Add C++ code for each internally handled event (input) 
+/* Add C++ code for each internally handled event (input)
  * The code must return 1 to trigger the event
  */
 
@@ -60,29 +66,31 @@ int Atm_Relay::event( int id ) {
 void Atm_Relay::action( int id ) {
   switch ( id ) {
     case ENT_COOL:
-      digitalWrite( pin_c1, RELAY_ON );
-      digitalWrite( pin_c2, RELAY_ON );
-      push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
     case EXT_COOL:
-      digitalWrite( pin_c1, RELAY_OFF);
-      digitalWrite( pin_c2, RELAY_OFF );
       return;
     case ENT_HEAT:
       digitalWrite( pin_h1, RELAY_ON );
       digitalWrite( pin_h2, RELAY_ON );
-      push( connectors, ON_CHANGE, 0, 1, 0 );
+      digitalWrite( pin_h3, RELAY_ON );
+      digitalWrite( pin_h4, RELAY_ON );
+      digitalWrite( pin_h5, RELAY_ON );
+      digitalWrite( pin_h6, RELAY_ON );
       return;
     case EXT_HEAT:
       digitalWrite( pin_h1, RELAY_OFF );
       digitalWrite( pin_h2, RELAY_OFF );
+      digitalWrite( pin_h3, RELAY_OFF );
+      digitalWrite( pin_h4, RELAY_OFF );
+      digitalWrite( pin_h5, RELAY_OFF );
+      digitalWrite( pin_h6, RELAY_OFF );
       return;
   }
 }
 
-Atm_Relay& Atm_Relay::automatic( long c, long h ) {
-  timer_c.set( c );
+Atm_Relay& Atm_Relay::automatic( unsigned long c, unsigned long h ) {
   timer_h.set( h );
+  timer_c.set( c );
   return *this;
 }
 
@@ -103,7 +111,7 @@ int Atm_Relay::state( void ) {
   return Machine::state();
 }
 
-/* Nothing customizable below this line                          
+/* Nothing customizable below this line
  ************************************************************************************************
 */
 

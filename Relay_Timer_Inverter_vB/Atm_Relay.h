@@ -8,7 +8,7 @@ class Atm_Relay: public Machine {
   enum { COOL, HEAT }; // STATES
   enum { EVT_HEAT, EVT_COOL, EVT_NEXT, EVT_TIMER_H, EVT_TIMER_C, ELSE }; // EVENTS
   Atm_Relay( void ) : Machine() {};
-  Atm_Relay& begin( int pin_c1, int pin_c2, int pin_h1, int pin_h2 );
+  Atm_Relay& begin( int pin_h1, int pin_h2, int pin_h3, int pin_h4, int pin_h5, int pin_h6);
   Atm_Relay& trace( Stream & stream );
   Atm_Relay& trigger( int event );
   int state( void );
@@ -17,15 +17,15 @@ class Atm_Relay: public Machine {
   Atm_Relay& heat( void );
   Atm_Relay& cool( void );
   Atm_Relay& next( void );
-  Atm_Relay& automatic( long c, long h );
+  Atm_Relay& automatic( unsigned long c, unsigned long h );
 
  private:
   enum { ENT_COOL, EXT_COOL, ENT_HEAT, EXT_HEAT }; // ACTIONS
   enum { ON_CHANGE, CONN_MAX }; // CONNECTORS
   atm_connector connectors[CONN_MAX];
-  int event( int id ); 
-  void action( int id ); 
-  int pin_c1, pin_c2, pin_h1, pin_h2;
+  int event( int id );
+  void action( int id );
+  int pin_h1, pin_h2, pin_h3, pin_h4, pin_h5, pin_h6;
   atm_timer_millis timer_c, timer_h;
 
 };
