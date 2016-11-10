@@ -45,8 +45,6 @@ void update_display_count(int count){
 void update_cycle_counter( int idx, int v, int up ) {
   count++;
 
-
-
   // Write to EEPROM every 10 cycles. 
   // According to the manufacturer Atmel, the EEPROM is good for 100,000 write/erase cycles, 
   // thus we increase the lifespan of the device tenfold with this little optimization. 
@@ -66,11 +64,11 @@ void reset_cycle_counter( int idx, int v, int up ) {
 void setup() {
   Serial.begin(9600);
 
-  // Retreive the cycle count from EEPROM. EEPROM saves variables between power cycles.
+  // Retrieve the cycle count from EEPROM. EEPROM saves variables between power cycles.
   EEPROM.get(address, count);
 
   // triggers the counter after given number of ms in a certain state. relay_pin[1] only goes HIGH in a cooling cycle, 
-  // which indicates that a heating cycle has also occured, thus the system has finished one complete heat/cool cycle and the cycle count needs to be updated.
+  // which indicates that a heating cycle has also occurred, thus the system has finished one complete heat/cool cycle and the cycle count needs to be updated.
   // When the counter is triggered, the count variable is updated, reflecting the number of cycles the test has undergone.
   // Relay initially set to high on all pins, triggers our counter.
   counter_pulse.begin( relay_pins[0], ms_pulse)
