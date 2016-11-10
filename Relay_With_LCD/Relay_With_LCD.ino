@@ -24,8 +24,8 @@ unsigned int count;   // Cycle count variable to store in EEPROM
 const int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
-unsigned long ms_heat = 240000; // Duration of heating cycle in ms
-unsigned long ms_cool = 180000; // Duration of cooling cycle in ms
+unsigned long ms_heat = 65000; // Duration of heating cycle in ms
+unsigned long ms_cool = 80000; // Duration of cooling cycle in ms
 
 // Button and trigger variables
 const unsigned long ms_pulse = ms_cool-1000; // Duration system must be cooling before a cycle is triggered
