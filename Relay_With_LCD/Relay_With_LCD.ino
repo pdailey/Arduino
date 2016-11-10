@@ -28,8 +28,8 @@ unsigned long ms_heat = 65000; // Duration of heating cycle in ms
 unsigned long ms_cool = 80000; // Duration of cooling cycle in ms
 
 // Button and trigger variables
-const unsigned long ms_pulse = ms_cool-1000; // Duration system must be cooling before a cycle is triggered
-const unsigned long ms_debounce = 500;       // Duration a button must be pressed before it is recognized
+unsigned long ms_pulse = 30000;  // Duration system must be cooling before a cycle is triggered
+unsigned long ms_debounce = 500; // Duration a button must be pressed before it is recognized
 
 void update_display_count(int count){
   // reset cycle count in case of interference
