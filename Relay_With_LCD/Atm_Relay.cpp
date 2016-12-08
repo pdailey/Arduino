@@ -11,10 +11,11 @@
 Atm_Relay& Atm_Relay::begin(int * pins) {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
-    /*          ON_ENTER  ON_LOOP  ON_EXIT  EVT_BUTTON  EVT_HEAT  EVT_COOL  EVT_HOLD  EVT_NEXT  EVT_TIMER_H  EVT_TIMER_C  ELSE */
-    /*  HOLD */ ENT_HOLD,      -1,      -1,       HEAT,     HEAT,     COOL,       -1,     HEAT,          -1,          -1,   -1,
-    /*  HEAT */ ENT_HEAT,      -1,      -1,       HOLD,       -1,     COOL,     HOLD,     COOL,        COOL,          -1,   -1,
-    /*  COOL */ ENT_COOL,      -1,      -1,       HOLD,     HEAT,       -1,     HOLD,     HEAT,          -1,        HEAT,   -1,
+    /*               ON_ENTER  ON_LOOP  ON_EXIT  EVT_BTN  EVT_L_BTN  EVT_HOLD  EVT_HEAT  EVT_COOL  EVT_MEASURE  EVT_NEXT  EVT_TIMER_H  EVT_TIMER_C  EVT_TIMER_M  ELSE */
+    /*    HOLD */    ENT_HOLD,      -1,      -1,    HEAT,   MEASURE,       -1,     HEAT,     COOL,     MEASURE,     HEAT,          -1,          -1,          -1,   -1,
+    /*    HEAT */    ENT_HEAT,      -1,      -1,    HOLD,   MEASURE,     HOLD,       -1,     COOL,     MEASURE,     COOL,        COOL,          -1,          -1,   -1,
+    /*    COOL */    ENT_COOL,      -1,      -1,    HOLD,   MEASURE,     HOLD,     HEAT,       -1,     MEASURE,     HEAT,          -1,        HEAT,          -1,   -1,
+    /* MEASURE */ ENT_MEASURE,      -1,      -1,    COOL,      COOL,       -1,     HEAT,     COOL,          -1,     COOL,          -1,          -1,        COOL,   -1,
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
@@ -32,6 +33,7 @@ Atm_Relay& Atm_Relay::begin(int * pins) {
   digitalWrite( outlet, RELAY_OFF );
   timer_h.set( -1 ); // set the timers
   timer_c.set( -1 );
+  timer_m.set( -1 );
   return *this;
 }
 
@@ -45,6 +47,8 @@ int Atm_Relay::event( int id ) {
       return timer_h.expired( this );
     case EVT_TIMER_C:
       return timer_c.expired( this );
+    case EVT_TIMER_M:
+      return timer_m.expired( this );
   }
   return 0;
 }
@@ -69,6 +73,16 @@ void Atm_Relay::action( int id ) {
       push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
 
+    case ENT_MEASURE:
+       digitalWrite( hot_bath, RELAY_ON );
+      delay(VALVE_DELAY);
+      digitalWrite( inlet, RELAY_ON );
+      digitalWrite( outlet, RELAY_ON );
+      delay(VALVE_DELAY);
+      digitalWrite( cold_bath, RELAY_OFF );
+      push( connectors, ON_CHANGE, 0, 1, 0 );
+      return;
+      
     case ENT_HEAT:
       digitalWrite( hot_bath, RELAY_ON );
       delay(VALVE_DELAY);
@@ -91,9 +105,10 @@ void Atm_Relay::action( int id ) {
   }
 }
 
-Atm_Relay& Atm_Relay::automatic( unsigned long h, unsigned long c) {
+Atm_Relay& Atm_Relay::automatic( unsigned long h, unsigned long c,unsigned long m) {
   timer_h.set( h );
   timer_c.set( c );
+  timer_m.set( m );
   return *this;
 }
 
@@ -122,8 +137,13 @@ int Atm_Relay::state( void ) {
 
 */
 
-Atm_Relay& Atm_Relay::button() {
-  trigger( EVT_BUTTON );
+Atm_Relay& Atm_Relay::btn() {
+  trigger( EVT_BTN );
+  return *this;
+}
+
+Atm_Relay& Atm_Relay::l_btn() {
+  trigger( EVT_L_BTN );
   return *this;
 }
 
@@ -167,9 +187,8 @@ Atm_Relay& Atm_Relay::onChange( atm_cb_push_t callback, int idx ) {
 
 Atm_Relay& Atm_Relay::trace( Stream & stream ) {
   Machine::setTrace( &stream, atm_serial_debug::trace,
-                     "RELAY\0EVT_BUTTON\0EVT_HEAT\0EVT_COOL\0EVT_HOLD\0EVT_NEXT\0EVT_TIMER_H\0EVT_TIMER_C\0ELSE\0HOLD\0HEAT\0COOL" );
+    "RELAY\0EVT_BTN\0EVT_L_BTN\0EVT_HOLD\0EVT_HEAT\0EVT_COOL\0EVT_MEASURE\0EVT_NEXT\0EVT_TIMER_H\0EVT_TIMER_C\0EVT_TIMER_M\0ELSE\0HOLD\0HEAT\0COOL\0MEASURE" );
   return *this;
 }
-
 
 

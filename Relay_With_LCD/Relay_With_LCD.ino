@@ -75,10 +75,31 @@ void setup() {
     .onChange(LOW, update_cycle_counter);
 
   // Button to cycle the system between hold, heating and cooling. 
-  state_btn.begin(state_pin)
-    .debounce( ms_debounce )
-    .onPress( relay, relay.EVT_BUTTON );
-
+  // Occasionally the system needs to set in the heating position for measurement purposes. 
+  // 0.5 second press and release - cycle between states
+  // 3 second press and release - hold in heating state
+  state_btn.begin( state_pin )
+    .onPress( [] ( int idx, int v, int up ) {
+      switch ( v ) {
+        case 1:
+          return; // debounce, prevent unwanted switching
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+          relay.trigger( relay.EVT_BTN );      // cycle between states
+          update_display_count(count); 
+          return;
+        case 6:
+          relay.trigger( relay.EVT_L_BTN ); // enter measuring heating period
+          lcd_display.printXY(11, 0, ".....");
+          lcd_display.updateDisplay(5);
+          return;
+      }
+    })
+    // 6 cases (really 2), 500 ms debounce
+    .longPress( 6, 500 );
+  
   // Button to reset the number of cycles
   reset_btn.begin(reset_pin)
     .debounce( ms_debounce )
@@ -87,7 +108,7 @@ void setup() {
   // The relays set the states of the valves, thus the state of the system. 
   relay.begin(relay_pins)
     // Set the duration of the heat and cool cycle.
-    .automatic(ms_heat, ms_cool)
+    .automatic(ms_heat, ms_cool, ms_measure)
     // Set to HOLD state.
     .trigger(relay.EVT_HOLD)
     .trace(Serial);
