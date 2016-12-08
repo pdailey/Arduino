@@ -6,6 +6,8 @@
 #include "Atm_Relay.h"
 #include "Atm_Menu.h"
 
+//#define DEBUGGING
+
 // State Machines
 Atm_Menu lcd_display;
 Automaton_Adafruit_RGBLCDShield_Buttons lcd_buttons;
@@ -24,8 +26,15 @@ unsigned int count;   // Cycle count variable to store in EEPROM
 int address = 0;      // EEPROM address of count variable.
 
 // Timer Variables
-unsigned long ms_heat = 65000; // Duration of heating cycle in ms
-unsigned long ms_cool = 80000; // Duration of cooling cycle in ms
+#ifdef DEBUGGING 
+  unsigned long ms_heat =    10000; // Duration of heating cycle in ms
+  unsigned long ms_cool =    10000; // Duration of cooling cycle in ms
+  unsigned long ms_measure = 30000; // Duration of measuring cycle in ms
+#else
+  unsigned long ms_heat =     65000;
+  unsigned long ms_cool =     80000;
+  unsigned long ms_measure = 600000;
+#endif
 
 // Button and trigger variables
 unsigned long ms_pulse = 30000;  // Duration system must be cooling before a cycle is triggered
