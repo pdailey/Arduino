@@ -35,11 +35,11 @@ void setup() {
   // Assign the pins to the relays
   relay.begin(heat_pin_1, heat_pin_2, heat_pin_3, heat_pin_4, heat_pin_5, heat_pin_6)
     // Display changes in state over serial
-    .trace( Serial );
+    .trace( Serial )
     // Set the time of the cooling and heating cycle.
     .automatic(ms_cool, ms_heat)
     // Trigger the heating cycle to run first
-    .trigger(relay.EVT_HEAT)
+    .trigger(relay.EVT_HEAT);
 }
 
 void loop() {
