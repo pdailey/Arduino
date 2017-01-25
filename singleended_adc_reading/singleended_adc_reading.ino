@@ -3,8 +3,9 @@
 
 Adafruit_ADS1115 ads;       //Use this for the 16-bit version
 
-int16_t adc0, adc1;
-double v0, v1;  
+int16_t adc0;
+double v0;
+double temp;    
 
 void setup(void) 
 {
@@ -21,11 +22,8 @@ void setup(void)
 void loop(void) 
 {
   adc0 = ads.readADC_SingleEnded(0);
-  adc1 = ads.readADC_SingleEnded(1);
   v0 = adc0 * 0.1875;
-  v1 = adc1 * 0.1875;
-  Serial.print(millis()/1000);Serial.print(", ");
-  Serial.print(v0);      Serial.print(", ");
-  Serial.print(v1);    Serial.print(", \n");
+  temp = ( v0 - 1.25 ) / 0.005;
+  Serial.print(temp);     
   delay(1000);
 }
