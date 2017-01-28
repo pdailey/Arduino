@@ -251,8 +251,10 @@ String readSensors(float f[]) {
   f[15] = am2315.readHumidity();
   delay(100);
 
-  for (int i = 0; i < 16; i++) {
+  // make a string for assembling the data to log:
   String str = "";
+
+  for (byte i = 0; i < 16; i++) {
     str += String(f[i], DEC) + ", ";
   }
 
