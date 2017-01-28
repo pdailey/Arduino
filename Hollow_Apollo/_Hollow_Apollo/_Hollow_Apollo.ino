@@ -361,6 +361,11 @@ bool setupTimers() {
   .onTimer( collectSensorData )
   .start();
 
+  char str [64];
+  snprintf(str, 64, "\n\t\tSensor Timer set: %d seconds between readings\n", sensor_interval_seconds);
+  Serial.print(str);
+
+
   file_timer.begin()
   .interval_seconds(21600) // 0.25 days
   //.interval_seconds(604800)     // TODO: Timer goes once a week
@@ -403,7 +408,11 @@ bool setupRelays() {
   .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
   .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
 
-  Serial.print("relays initialized.\n");
+  char str [64];
+  byte min_heat = ms_heat / (60 * 1000);
+  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the heaters switch off. A complete cycle is 1 cool + 2 heats.
+  snprintf(str, 64, "\n\t\tRelays set: Heat %d min, Cool %d min.\n", min_heat, min_off);
+  Serial.print(str);
   return true;
 }
 
