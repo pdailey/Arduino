@@ -1,22 +1,24 @@
-#include <SPI.h>
-#include <SD.h>
-#include <Wire.h>
-
+#include <SPI.h>              // The SD card uses SPI
+#include <SD.h>               // SD Card
+#include <Wire.h>             // Used to establish I2C connections
+#include <EEPROM.h>           // Retain information in memory between power cycles
+#include <stdio.h>            // This program uses the sprintf function
 #include "RTClib.h"           // RTC
-#include <EEPROM.h>
 #include <Adafruit_ADS1015.h> // ADC for thermocouples
 #include <Adafruit_INA219.h>  // current sensor for fan
 #include <Adafruit_AM2315.h>  // outside T/RH sensor
 #include "Adafruit_SHT31.h"   // inside T/RH sensor
-#include <Adafruit_NeoPixel.h>
-#include <Automaton.h>  // FSM framework
-#include "Atm_Relay.h"  // jhlk
+#include <Adafruit_NeoPixel.h>// Status LEDs
+#include <Automaton.h>        // Finite State Machine framework
+#include "Atm_Relay.h"        // Controls relay timing
+
+// WiFi can be used as a secondary backup for time adjustment
+// on the RTC and to upload data
 
 //#define WIFI_ENABLED
-
 #ifdef WIFI_ENABLED
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
+#include <WiFiUdp.h> // For connection to NTP to sync time
 #endif
 
 // neopixels
@@ -25,23 +27,28 @@ const byte RTC_PIXEL = 0;
 const byte SD_PIXEL = 1;
 const byte WIFI_PIXEL = 2;
 
-// Assign number of pixles, pin and pixel type
+// Assign number of pixels, pin and pixel type
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
+
+// Define Specific Colors
 uint32_t red = pixels.Color(255, 0, 0);
-//uint32_t yellow = pixels.Color(255, 140, 0); // yellow looks too close to red
 uint32_t green = pixels.Color(0, 225, 0);
 uint32_t blue = pixels.Color(0, 0, 225);
 
-//rtc
+
+// RTC
 RTC_PCF8523 rtc;
 uint32_t unix_time;
 
-//SD
+
+// SD
 const byte chipSelect = 15;
 
 // File Name and header
 File file;
 char file_name[] = "00000.CSV";
+
+// Define the header line for CSVs
 #define QUOTE(...) #__VA_ARGS__
 const char *file_headers = QUOTE(
                              dt,                             // datetime
@@ -51,25 +58,29 @@ const char *file_headers = QUOTE(
                              T_O, RH_O                         // outside temperature and relative humidity
                            );
 
-// Sensors
+
+// SENSORS
+// Store most recent sensor values to pass between functions
 float sensor_values[16] = {};
 
-Adafruit_ADS1115 ads_L(0x48);    // 16 bit ADC for thermocouples
-Adafruit_ADS1115 ads_R(0x49);  // 16 bit ADC for thermocouples
+// Initialize and assign addresses to senors
+Adafruit_ADS1115 ads_L(0x48);    // ADC for thermocouples
+Adafruit_ADS1115 ads_R(0x49);    // ADC for thermocouples
 
 Adafruit_INA219 ina219_L(0x40);   // Current sensors for left fan
 Adafruit_INA219 ina219_R(0x41);   // Current sensors for right fan
 
 //SHT31 address is specified in *.begin()
-Adafruit_SHT31 sht31_L = Adafruit_SHT31(); // inside temperature and relative humidity
-Adafruit_SHT31 sht31_R = Adafruit_SHT31(); // inside temperature and relative humidity
+Adafruit_SHT31 sht31_L = Adafruit_SHT31(); // left inside T/RH
+Adafruit_SHT31 sht31_R = Adafruit_SHT31(); // right inside T/RH
 
 Adafruit_AM2315 am2315; // AM2315 - outside T/RH
 
 
 
-// WiFi
+// WIFI
 #ifdef WIFI_ENABLED
+//Hard-coded network and password
 const char* ssid = "Hollow_Apollo";
 const char* password =  "liftoff54321";
 #endif
@@ -87,7 +98,7 @@ WiFiUDP Udp; // A UDP instance to let us send and receive packets over UDP
 #endif
 
 
-// Relays
+// RELAYS
 Atm_Relay relay;
 
 // TODO: times will change
@@ -110,12 +121,12 @@ const int sensor_interval_seconds = 15; // Seconds between readings
 Atm_timer file_timer;
 
 #ifdef WIFI_ENABLED
-Atm_timer rtc_timer; // rtc update to WiFi
+Atm_timer rtc_timer; // RTC update to WiFi
 #endif
 
 
 void setup() {
-  // Open serial communications and wait for port to open:
+  // Open serial communications
   Serial.begin(9600);
 
   // Keep this delay to allow easy loading of sketches when reset is pressed
@@ -126,13 +137,13 @@ void setup() {
 
   // Setup the status LEDs
   setupNeopixels();
-  delay(3000); // for dramatic effect
+  delay(3000); // delay for dramatic effect
 
   // set the system time
   bool RTC_setup = setupRTC();
   RTC_setup ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
   pixels.show();
-  delay(3000); // for dramatic effect
+  delay(3000);
 
   // set the file used to write to SD
   setFilename(file_name);
@@ -141,8 +152,8 @@ void setup() {
   bool SD_setup = setupSD();
   SD_setup ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
   pixels.show();
-  delay(3000); // for dramatic effect
-  // write the filename headers, kyle will thank you
+  delay(3000);
+
   Serial.print("\tWriting file headers...\n\t\t");
   writeStringToSD(file_headers, file_name);
 
@@ -156,9 +167,9 @@ void setup() {
   if (wifi_online) {
     setupUDP();
   }
-  delay(3000); // for dramatic effect
+  delay(3000);
 #else
-  pixels.setPixelColor(WIFI_PIXEL, 0, 0, 0); // turn off the wifi pixel
+  pixels.setPixelColor(WIFI_PIXEL, 0, 0, 0); // turn off the WiFi pixel
   pixels.show();
 #endif
 
@@ -170,26 +181,24 @@ void setup() {
 
   Serial.print("\n\n\n\nEntering Main Program\n");
   Serial.print("=============================\n\n");
-
   Serial.println(file_headers);
-  //collectSensorData();
 }
 
 void loop() {
+  // Handles the timers and relays using the automaton framework
   automaton.run();
 }
 
 String readSensors(float f[]) {
   // make a string for assembling the data to log:
   String str = "";
-
-  //  reset the array of values
+  //  reset the array of values, marking unset values
   for (int i = 0; i < 16; i++) {
     f[i] = -404;
   }
 
   // read  sensors and update value in array
-  // read thermocouples 1-4 in deg C
+  // read thermocouples in left chamber
   for (byte i = 0; i < 4; i++) {
     double adc = ads_L.readADC_SingleEnded(i); // read the value on the pin
     double v = adc * 0.1875;                  // Convert value to voltage
@@ -197,7 +206,7 @@ String readSensors(float f[]) {
   }
   delay(100);
 
-  // read thermocouples 5-8 in deg C
+  // read thermocouples in right chamber
   for (byte i = 0; i < 4; i++) {
     double adc = ads_R.readADC_SingleEnded(i); // read the value on the pin
     double v = adc * 0.1875;                  // Convert value to voltage
@@ -239,16 +248,17 @@ String readSensors(float f[]) {
 
 
 bool writeStringToSD(String str, char *file_name) {
-  // if the file is available, write to it:
   File file = SD.open(file_name, FILE_WRITE);
+
+  // if the file is available, write to it:
   if (file) {
     file.println(str);
     file.close();
     Serial.println(str);
     return true;
   } else {
+    Serial.print("WARNING: error writing to file: ");
     Serial.println(file_name);
-    Serial.println("error writing to file");
     return false;
   }
 }
@@ -274,7 +284,7 @@ bool setupSD() {
     Serial.println("Card failed, or not present");
     return false;
   } else {
-    Serial.println("card initialized.");
+    Serial.println("Card initialized.");
     return true;
   }
 }
@@ -330,7 +340,6 @@ bool setupTimers() {
   .interval_seconds(sensor_interval_seconds)
   .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
   .onTimer( collectSensorData )
-  //.trace( Serial ) // Show output of timer
   .start();
 
   file_timer.begin()
@@ -338,7 +347,6 @@ bool setupTimers() {
   //.interval_seconds(604800)     // TODO: Timer goes once a week
   .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
   .onTimer( file_timer_callback )
-  //.trace( Serial ) // Show output of timer
   .start();
 
 
@@ -348,7 +356,6 @@ bool setupTimers() {
   //.interval_seconds(604800)     // TODO: Timer goes once a week
   .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
   .onTimer( rtc_timer_callback )
-  .trace( Serial ) // Show output of timer
   .start();
 #endif
 
@@ -358,6 +365,7 @@ bool setupTimers() {
 
 
 void file_timer_callback( int idx, int v, int up ) {
+  // Set the new filename
   setFilename(file_name);
 }
 
@@ -373,9 +381,8 @@ bool setupRelays() {
   Serial.print("\tInitializing Relays...");
 
   relay.begin(pin_p, pin_v)   // Assign the pins to the relays
-  //.trace( Serial )          // Display changes in state over serial
   .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
-  .trigger(relay.EVT_HEAT_P); // Trigger the heating cycle to run first
+  .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
 
   Serial.print("relays initialized.\n");
   return true;
@@ -387,10 +394,10 @@ void collectSensorData( int idx, int v, int up ) {
   String data = readSensors(sensor_values);
   String timeStamp = getUnixTime();
   String str = timeStamp + ", " + data;
-  
+
   // save the data to the SD
   bool ok = writeStringToSD(str, file_name);
-  ok ? (pixels.setPixelColor(SD_PIXEL, red)) : ((pixels.setPixelColor(SD_PIXEL, green)));
+  ok ? (pixels.setPixelColor(SD_PIXEL, red)) : (pixels.setPixelColor(SD_PIXEL, green));
   pixels.show();
 }
 
@@ -418,12 +425,11 @@ void setFilename(char *filename) {
   Serial.print("\tSetting file name...");
   EEPROM.begin(12); // call EEPROM.begin(size) before you start reading or writing
 
-  // A counter is saved to eeprom as an unsigned bit (0-65535)
+  // A counter is saved to EEPROM as an unsigned bit (0-65535)
   // retrieve the counter value to set the file name
   byte high = EEPROM.read(0);
   byte low  = EEPROM.read(1);
   unsigned int cnt = (high << 8) + low; //reconstruct the integer
-  Serial.println(cnt);
 
   // update the file name variable
   sprintf(filename, "%05d.CSV", cnt);
@@ -431,9 +437,8 @@ void setFilename(char *filename) {
   Serial.print("file name set: \n\t\t");
   Serial.println(filename);
 
-  // Increment the count and save to eeprom
+  // Increment the count and save to EEPROM
   cnt++;
-  Serial.println(cnt);
   EEPROM.write(0, highByte(cnt)); //write the first half
   EEPROM.write(1, lowByte(cnt)); //write the second half
   EEPROM.end();
@@ -446,11 +451,9 @@ bool adjustRTCusingNTP() {
   WiFi.hostByName(ntpServerName, timeServerIP);
 
   sendNTPpacket(timeServerIP); // send an NTP packet to a time server
-  //get the NTP timestamp
-  unsigned long epoch = getNTP();
+  unsigned long epoch = getNTP(); // get the NTP time stamp
 
-  //set the RTC
-  rtc.adjust(epoch);
+  rtc.adjust(epoch);  // set the RTC
   return true;
 }
 #endif
@@ -467,23 +470,21 @@ unsigned long getNTP() {
     Udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
 
     //the timestamp starts at byte 40 of the received packet and is four bytes,
-    // or two words, long. First, esxtract the two words:
-
+    // or two words, long. First, extract the two words:
     unsigned long highWord = word(packetBuffer[40], packetBuffer[41]);
     unsigned long lowWord = word(packetBuffer[42], packetBuffer[43]);
+
     // combine the four bytes (two words) into a long integer
     // this is NTP time (seconds since Jan 1 1900):
     unsigned long secsSince1900 = highWord << 16 | lowWord;
-    Serial.print("Seconds since Jan 1 1900 = " );
-    Serial.println(secsSince1900);
 
-    // now convert NTP time into everyday time:
-    Serial.print("Unix time = ");
+    // convert NTP time time to unix:
     // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
     const unsigned long seventyYears = 2208988800UL;
-    // subtract seventy years:
     unsigned long epoch = secsSince1900 - seventyYears;
+    Serial.print("Unix time = ");
     Serial.println(epoch);
+
     return epoch;
   }
 }
@@ -508,7 +509,7 @@ void sendNTPpacket(IPAddress & address) {
   packetBuffer[15]  = 52;
 
   // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:
+  // you can send a packet requesting a time stamp:
   Udp.beginPacket(address, 123); //NTP requests are to port 123
   Udp.write(packetBuffer, NTP_PACKET_SIZE);
   Udp.endPacket();
