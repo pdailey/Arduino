@@ -205,8 +205,6 @@ void loop() {
 }
 
 String readSensors(float f[]) {
-  // make a string for assembling the data to log:
-  String str = "";
   //  reset the array of values, marking unset values
   for (int i = 0; i < 16; i++) {
     f[i] = -404;
@@ -254,6 +252,7 @@ String readSensors(float f[]) {
   delay(100);
 
   for (int i = 0; i < 16; i++) {
+  String str = "";
     str += String(f[i], DEC) + ", ";
   }
 
