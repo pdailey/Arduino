@@ -54,11 +54,15 @@ char file_name[] = "00000.CSV";
 // Define the header line for CSVs
 #define QUOTE(...) #__VA_ARGS__
 const char *file_headers = QUOTE(
-                             dt,                             // datetime
-                             TC_4, TC_3, TC_2, TC_1, TC_8, TC_7, TC_6, TC_5, // thermocouples
-                             I_L, I_R,                              // fan current
-                             T_L, RH_L, T_R, RH_R,               // inside temperature and relative humidity
-                             T_O, RH_O                         // outside temperature and relative humidity
+                             datetime,
+                             // thermocouples
+                             TC_4, TC_3, TC_2, TC_1,
+                             TC_8, TC_7, TC_6, TC_5,
+                             // current sensors
+                             Fan Current L, Fan Currrent R,
+                             // Temperature and relative humidity
+                             T_L, RH_L, T_R, RH_R,
+                             T_Out, RH_Out
                            );
 
 
