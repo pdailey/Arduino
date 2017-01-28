@@ -21,7 +21,10 @@
 #include <WiFiUdp.h> // For connection to NTP to sync time
 #endif
 
-// neopixels
+// Enable debugging to speed up the timer intervals
+#define DEBUGGING
+
+// NEOPIXELS
 // Strip order
 const byte RTC_PIXEL = 0;
 const byte SD_PIXEL = 1;
@@ -101,23 +104,31 @@ WiFiUDP Udp; // A UDP instance to let us send and receive packets over UDP
 // RELAYS
 Atm_Relay relay;
 
-// TODO: times will change
-// time entered in ms
-//const unsigned long ms_off  = 4500000;
-//const unsigned long ms_heat = 900000;
-
-const unsigned long ms_off  = 45000;
-const unsigned long ms_heat = 15000;
-
 // Pins atached to the relay
 const byte pin_p = 0;
 const byte pin_v = 16;
 
+// TODO: times will change
+// time in ms for different cycles
+#ifdef DEBUGGING
+const unsigned long ms_off  = 60000;
+const unsigned long ms_heat = 60000;
+#else
+const unsigned long ms_off  = 4500000;
+const unsigned long ms_heat = 900000;
+#endif
+
+
 // Timers
 // TODO: Changes sensor interval
 Atm_timer sensor_timer;
+
+#ifdef DEBUGGING
 const int sensor_interval_seconds = 15; // Seconds between readings
-//const int sensor_interval_seconds = 300; // Seconds between readings
+#else
+const int sensor_interval_seconds = 300; // Seconds between readings
+#endif
+
 Atm_timer file_timer;
 
 #ifdef WIFI_ENABLED
@@ -242,7 +253,10 @@ String readSensors(float f[]) {
     str += String(f[i], DEC) + ", ";
   }
 
-  //Serial.println(str);
+  #ifdef DEBUGGING
+  Serial.println(str);
+  #endif
+
   return str;
 }
 
