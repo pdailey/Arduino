@@ -391,6 +391,9 @@ bool setupTimers() {
 void file_timer_callback( int idx, int v, int up ) {
   // Set the new filename
   setFilename(file_name);
+
+  // Write the headers to the new file
+  writeStringToSD(file_headers, file_name);
 }
 
 
