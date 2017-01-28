@@ -14,12 +14,25 @@
 
 // WiFi can be used as a secondary backup for time adjustment
 // on the RTC and to upload data
-
+// WARNING! Choose either WIFI or SOFT AP, not both!
 //#define WIFI_ENABLED
 #ifdef WIFI_ENABLED
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h> // For connection to NTP to sync time
 #endif
+
+#define SoftAP_ENABLED
+
+#ifdef SoftAP_ENABLED
+#include <ESP8266WiFi.h>
+#endif
+
+#ifdef SoftAP_ENABLED
+const char APName[] = "Hollow Apollo - US";
+const char APPass[] = "liftoff54321"; // Password
+WiFiServer server(80);
+#endif
+
 
 // Enable debugging to speed up the timer intervals
 #define DEBUGGING
@@ -42,7 +55,7 @@ uint32_t blue = pixels.Color(0, 0, 225);
 // RTC
 RTC_PCF8523 rtc;
 uint32_t unix_time;
-
+DateTime lastSensorUpdate;
 
 // SD
 const byte chipSelect = 15;
@@ -68,7 +81,7 @@ const char *file_headers = QUOTE(
 
 // SENSORS
 // Store most recent sensor values to pass between functions
-float sensor_values[16] = {};
+float sensor_values[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Initialize and assign addresses to senors
 Adafruit_ADS1115 ads_L(0x48);    // ADC for thermocouples
@@ -88,7 +101,7 @@ Adafruit_AM2315 am2315; // AM2315 - outside T/RH
 // WIFI
 #ifdef WIFI_ENABLED
 //Hard-coded network and password
-const char* ssid = "Hollow_Apollo";
+const char* ssid =      "Hollow_Apollo";
 const char* password =  "liftoff54321";
 #endif
 
@@ -139,6 +152,12 @@ Atm_timer file_timer;
 Atm_timer rtc_timer; // RTC update to WiFi
 #endif
 
+#ifdef DEBUGGING
+int amt_delay = 1;
+#else 
+int amt_delay = 3000;
+#endif
+
 
 void setup() {
   // Open serial communications
@@ -152,13 +171,13 @@ void setup() {
 
   // Setup the status LEDs
   setupNeopixels();
-  delay(3000); // delay for dramatic effect
+  delay(amt_delay);
 
   // set the system time
   bool RTC_setup = setupRTC();
   RTC_setup ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
   pixels.show();
-  delay(3000);
+  delay(amt_delay);
 
   // set the file used to write to SD
   setFilename(file_name);
@@ -167,7 +186,7 @@ void setup() {
   bool SD_setup = setupSD();
   SD_setup ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
   pixels.show();
-  delay(3000);
+  delay(amt_delay);
 
   Serial.print("\tWriting file headers...\n\t\t");
   writeStringToSD(file_headers, file_name);
@@ -182,9 +201,11 @@ void setup() {
   if (wifi_online) {
     setupUDP();
   }
-  delay(3000);
-#else
-  pixels.setPixelColor(WIFI_PIXEL, 0, 0, 0); // turn off the WiFi pixel
+#endif
+
+#ifdef SoftAP_ENABLED
+  bool ap_setup = setupAP();
+  ap_setup ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
   pixels.show();
 #endif
 
@@ -200,8 +221,15 @@ void setup() {
 }
 
 void loop() {
+
   // Handles the timers and relays using the automaton framework
   automaton.run();
+
+  // Check if a client has connected
+  WiFiClient client = server.available();
+  if (client) {
+    handleClientConnection(client);
+  }
 }
 
 String readSensors(float f[]) {
@@ -257,10 +285,6 @@ String readSensors(float f[]) {
   for (byte i = 0; i < 16; i++) {
     str += String(f[i], DEC) + ", ";
   }
-
-  #ifdef DEBUGGING
-  Serial.println(str);
-  #endif
 
   return str;
 }
@@ -426,6 +450,8 @@ void collectSensorData( int idx, int v, int up ) {
   String timeStamp = getUnixTimeFromRTC();
   String str = timeStamp + ", " + data;
 
+  lastSensorUpdate = rtc.now();
+
   // save the data to the SD
   bool ok = writeStringToSD(str, file_name);
   ok ? (pixels.setPixelColor(SD_PIXEL, red)) : (pixels.setPixelColor(SD_PIXEL, green));
@@ -442,9 +468,14 @@ String getDateTimeString(DateTime t) {
   String mm = String(t.minute(), DEC);
   String ss = String(t.second(), DEC);
   //Put all the time and date strings into one String
-  return String( y + mn + d + hh + mm + ss);
+  return String( "20" + y + mn + d + hh + mm + ss);
 }
 
+String getTimeString(DateTime t) {
+  char str [12];
+  snprintf(str, 12, "%02d:%02d:%02d", t.hour(), t.minute(), t.second());
+  return str;
+}
 
 String getUnixTimeFromRTC() {
   DateTime now = rtc.now();
@@ -475,6 +506,132 @@ void setFilename(char *filename) {
   EEPROM.end();
 }
 
+#ifdef SoftAP_ENABLED
+bool setupAP() {
+  Serial.print("\tInitiailzing Access Point...");
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(APName, APPass);
+  yield();
+
+  server.begin();
+  Serial.print("Access Point established. Connect at:");
+
+  char str [64];
+  snprintf(str, 64, "\n\t\tNetwork:  %s \n\t\tPassword: %s\n", APName, APPass);
+  Serial.print(str);
+  return true;
+}
+#endif
+
+#ifdef SoftAP_ENABLED
+void handleClientConnection(WiFiClient client)
+{
+  Serial.println("A client has connected.");
+  // Read the first line of the request
+  String req = client.readStringUntil('\r');
+  Serial.println(req);
+  client.flush();
+
+  // Match the request
+  int val = -1; // We'll use 'val' to keep track of both the
+  // request type (read/set) and value if set.
+  if (req.indexOf("/read") != -1)
+    val = 0;
+  // other values will get an error page
+
+  client.flush();
+
+  // Prepare the response. Start with the common header:
+  String s = "HTTP/1.1 200 OK\r\n";
+  s += "Content-Type: text/html\r\n\r\n";
+  s += "<!DOCTYPE HTML>\r\n<html>";
+  s += "\r\n";
+  s += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />";
+
+  if (val == 0)
+  {
+    // heading
+    s += "<h1>Hollow Apollo</h1><hr />";
+
+    // time
+    s += "<h3>Current Time: " + getTimeString(rtc.now()) + "</h3>";
+    s += "<h3>Sensors Last Updated: "+ getTimeString(lastSensorUpdate) + "</h3>";
+    yield();
+    
+    // outside
+    char str [64];
+    char t[8];
+    char rh[8];
+    char mA[8];
+    dtostrf(sensor_values[14], 7, 2, t);   
+    dtostrf(sensor_values[15], 7, 2, rh);         
+    snprintf(str, 64, "<h3>Outside T/RH: %sC / %sRH</h3>", t, rh);
+    s += str;
+    yield();
+    
+    // left chamber
+    s += " <hr /><h3>Left Chamber</h3>";
+    dtostrf(sensor_values[10], 7, 2, t);   
+    dtostrf(sensor_values[11], 7, 2, rh);         
+    snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
+    s += str;
+  yield();
+    dtostrf(sensor_values[8], 7, 1, mA);         
+    snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
+    s += str;
+     yield();
+     
+    s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
+    s += "<td>Thermocouple</td> <td>4</td><td>3</td><td>2</td><td>1</td></tr><tr>";
+    s += "<td>Temperature, C</td>";
+    yield();
+    
+    for(byte i = 0; i < 4; i++){
+      dtostrf(sensor_values[i], 7, 1, t); 
+      snprintf(str, 64, "<td>%s</td>", t);
+      s += str;
+    }
+    s += "</tr></tbody></table>";
+
+    // right chamber
+    s += " <hr /><h3>Right Chamber</h3>";
+    dtostrf(sensor_values[12], 7, 2, t);   
+    dtostrf(sensor_values[13], 7, 2, rh);         
+    snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
+    s += str;
+    yield();
+  
+    dtostrf(sensor_values[9], 7, 1, mA);         
+    snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
+    s += str;
+     yield();
+     
+    s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
+    s += "<td>Thermocouple</td> <td>8</td><td>7</td><td>6</td><td>5</td></tr><tr>";
+    s += "<td>Temperature, C</td>";
+    yield();
+    
+    for(byte i = 4; i < 8; i++){
+      dtostrf(sensor_values[i], 7, 1, t); 
+      snprintf(str, 64, "<td>%s</td>", t);
+      s += str;
+    }
+    s += "</tr></tbody></table>";
+    
+  } else {
+    s += "Invalid Request.<br> Try /read or /set_time.";
+  }
+  s += "</html>\n";
+
+  // Send the response to the client
+  client.print(s);
+  yield();
+  Serial.println("Client disonnected");
+
+  // The client will actually be disconnected
+  // when the function returns and 'client' object is detroyed
+}
+#endif
 
 #ifdef WIFI_ENABLED
 bool adjustRTCusingNTP() {
