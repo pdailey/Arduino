@@ -420,7 +420,7 @@ bool setupRelays() {
 void collectSensorData( int idx, int v, int up ) {
   // read the sensor data and save it to a string
   String data = readSensors(sensor_values);
-  String timeStamp = getUnixTime();
+  String timeStamp = getUnixTimeFromRTC();
   String str = timeStamp + ", " + data;
 
   // save the data to the SD
@@ -443,7 +443,7 @@ String getDateTimeString(DateTime t) {
 }
 
 
-String getUnixTime() {
+String getUnixTimeFromRTC() {
   DateTime now = rtc.now();
   return String(now.unixtime(), DEC);
 }
