@@ -13,15 +13,15 @@
 #include "Atm_Relay.h"        // Controls relay timing
 
 // WiFi can be used as a secondary backup for time adjustment
-// on the RTC and to upload data
+// on the RTC and to upload data to the cloud
 // WARNING! Choose either WIFI or SOFT AP, not both!
 //#define WIFI_ENABLED
+#define SoftAP_ENABLED
+
 #ifdef WIFI_ENABLED
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h> // For connection to NTP to sync time
 #endif
-
-#define SoftAP_ENABLED
 
 #ifdef SoftAP_ENABLED
 #include <ESP8266WiFi.h>
@@ -35,13 +35,12 @@ WiFiServer server(80);
 
 
 // Enable debugging to speed up the timer intervals
-#define DEBUGGING
+//#define DEBUGGING
 
 // NEOPIXELS
 // Strip order
-const byte RTC_PIXEL = 0;
-const byte SD_PIXEL = 1;
-const byte WIFI_PIXEL = 2;
+// TODO: TEST
+enum Pixels {RTC_PIXEL, SD_PIXEL, WIFI_PIXEL};
 
 // Assign number of pixels, pin and pixel type
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
@@ -56,6 +55,7 @@ uint32_t blue = pixels.Color(0, 0, 225);
 RTC_PCF8523 rtc;
 uint32_t unix_time;
 DateTime lastSensorUpdate;
+DateTime lastRelayUpdate;
 
 // SD
 const byte chipSelect = 15;
@@ -81,7 +81,7 @@ const char *file_headers = QUOTE(
 
 // SENSORS
 // Store most recent sensor values to pass between functions
-float sensor_values[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+float sensor_values[16] = {0};
 
 // Initialize and assign addresses to senors
 Adafruit_ADS1115 ads_L(0x48);    // ADC for thermocouples
@@ -120,6 +120,8 @@ WiFiUDP Udp; // A UDP instance to let us send and receive packets over UDP
 
 // RELAYS
 Atm_Relay relay;
+const char* Relay_State_Strings [] = {"HEAT LEFT", "HEAT RIGHT", "COOLING ALL"};
+
 
 // Pins atached to the relay
 const byte pin_p = 0;
@@ -139,23 +141,20 @@ const unsigned long ms_heat = 900000;
 // Timers
 // TODO: Changes sensor interval
 Atm_timer sensor_timer;
-
-#ifdef DEBUGGING
-const int sensor_interval_seconds = 15; // Seconds between readings
-#else
-const int sensor_interval_seconds = 300; // Seconds between readings
-#endif
-
 Atm_timer file_timer;
 
-#ifdef WIFI_ENABLED
-Atm_timer rtc_timer; // RTC update to WiFi
+#ifdef DEBUGGING
+const uint8_t sensor_interval_seconds = 15; // Seconds between readings
+const uint16_t file_interval_seconds = 300;  // seconds between file name changes
+#else
+const uint8_t sensor_interval_seconds = 240;   // 4 min
+const uint32_t file_interval_seconds = 259200; // 3 days
 #endif
 
-#ifdef DEBUGGING
-int amt_delay = 1;
-#else 
-int amt_delay = 3000;
+
+#ifdef WIFI_ENABLED
+Atm_timer rtc_timer; // RTC update using NTP
+const uint16_t rtc_interval_seconds = 3600; // 1 hour
 #endif
 
 
@@ -166,6 +165,13 @@ void setup() {
   // Keep this delay to allow easy loading of sketches when reset is pressed
   delay(5000);
 
+  // The following delay is used for dramatic effect.
+#ifdef DEBUGGING
+  int amt_delay = 1;
+#else
+  int amt_delay = 3000;
+#endif
+
   Serial.print("\n\n\n\nInitializing Hollow Apollo...\n");
   Serial.print("=============================\n\n");
 
@@ -174,8 +180,8 @@ void setup() {
   delay(amt_delay);
 
   // set the system time
-  bool RTC_setup = setupRTC();
-  RTC_setup ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
+  bool _status = setupRTC();
+  _status ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
   pixels.show();
   delay(amt_delay);
 
@@ -183,8 +189,8 @@ void setup() {
   setFilename(file_name);
   delay(100);
 
-  bool SD_setup = setupSD();
-  SD_setup ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
+  _status = setupSD();
+  _status ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
   pixels.show();
   delay(amt_delay);
 
@@ -195,8 +201,8 @@ void setup() {
   delay(100);
 
 #ifdef WIFI_ENABLED
-  bool wifi_setup = setupWifi();
-  wifi_setup ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
+  _status = setupWifi();
+  _status ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
   pixels.show();
   if (wifi_online) {
     setupUDP();
@@ -204,8 +210,8 @@ void setup() {
 #endif
 
 #ifdef SoftAP_ENABLED
-  bool ap_setup = setupAP();
-  ap_setup ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
+  _status = setupAP();
+  _status ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
   pixels.show();
 #endif
 
@@ -378,6 +384,7 @@ bool setupSensors() {
 
 bool setupTimers() {
   Serial.print("\tInitializing Timers...");
+  char str [64];
 
   sensor_timer.begin()
   .interval_seconds(sensor_interval_seconds)
@@ -385,29 +392,32 @@ bool setupTimers() {
   .onTimer( collectSensorData )
   .start();
 
-  char str [64];
-  snprintf(str, 64, "\n\t\tSensor Timer set: %d seconds between readings\n", sensor_interval_seconds);
+  snprintf(str, 64, "\n\t\tSensor Timer set: readings taken every %d seconds", sensor_interval_seconds);
   Serial.print(str);
 
 
   file_timer.begin()
-  .interval_seconds(21600) // 0.25 days
-  //.interval_seconds(604800)     // TODO: Timer goes once a week
+  .interval_seconds(file_interval_seconds)
   .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
   .onTimer( file_timer_callback )
   .start();
 
+  snprintf(str, 64, "\n\t\tFile Timer set: save file changed every %d days", file_interval_seconds / 86400 );
+  Serial.print(str);
+
 
 #ifdef WIFI_ENABLED
   rtc_timer.begin()
-  .interval_seconds(600) // hourly
-  //.interval_seconds(604800)     // TODO: Timer goes once a week
-  .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
+  .interval_seconds(rtc_interval_seconds)
+  .repeat( ATM_TIMER_OFF )
   .onTimer( rtc_timer_callback )
   .start();
+
+  snprintf(str, 64, "\n\t\tRTC Timer set: %d seconds between adjusting RTC using NTP servers\n", rtc_interval_seconds);
+  Serial.print(str);
 #endif
 
-  Serial.print("timers initialized.\n");
+  Serial.print("\n\t\t...timers initialized.\n");
   return true;
 }
 
@@ -424,7 +434,6 @@ void file_timer_callback( int idx, int v, int up ) {
 #ifdef WIFI_ENABLED
 void rtc_timer_callback( int idx, int v, int up ) {
   adjustRTCusingNTP();
-}
 #endif
 
 
@@ -433,16 +442,21 @@ bool setupRelays() {
 
   relay.begin(pin_p, pin_v)   // Assign the pins to the relays
   .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
+  .onChange( relay_callback)
   .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
-
+  
+  
   char str [64];
   byte min_heat = ms_heat / (60 * 1000);
-  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the heaters switch off. A complete cycle is 1 cool + 2 heats.
+  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the 2 heater banks alternate to keep power consumption low. A complete cycle is 1 off + 2 heats.
   snprintf(str, 64, "\n\t\tRelays set: Heat %d min, Cool %d min.\n", min_heat, min_off);
   Serial.print(str);
   return true;
 }
 
+void relay_callback( int idx, int v, int up ) {
+  lastRelayUpdate = rtc.now();
+}
 
 void collectSensorData( int idx, int v, int up ) {
   // read the sensor data and save it to a string
@@ -460,15 +474,10 @@ void collectSensorData( int idx, int v, int up ) {
 
 
 String getDateTimeString(DateTime t) {
-  // Assemble Strings to log data
-  String y = String(t.year(), DEC);
-  String mn = String(t.month(), DEC);
-  String d = String(t.day(), DEC);
-  String hh = String(t.hour(), DEC);
-  String mm = String(t.minute(), DEC);
-  String ss = String(t.second(), DEC);
-  //Put all the time and date strings into one String
-  return String( "20" + y + mn + d + hh + mm + ss);
+  char str [19];
+  snprintf(str, 19, "%04d/%02d/%02d %02d:%02d:%02d",
+           t.year(), t.month(), t.day(), t.hour(), t.minute(), t.second());
+  return str;
 }
 
 String getTimeString(DateTime t) {
@@ -555,39 +564,44 @@ void handleClientConnection(WiFiClient client)
 
     // time
     s += "<h3>Current Time: " + getTimeString(rtc.now()) + "</h3>";
-    s += "<h3>Sensors Last Updated: "+ getTimeString(lastSensorUpdate) + "</h3>";
+    s += "<h3>Sensors Last Updated: " + getTimeString(lastSensorUpdate) + "</h3>";
+    s += "<hr />";
+    s += "<p>Relay Last Changed: " + getTimeString(lastRelayUpdate) + "</p>";
+    s += "<p>System State: ";
+    s += Relay_State_Strings[relay.state()];
+    s += "</p>";
     yield();
-    
+
     // outside
     char str [64];
     char t[8];
     char rh[8];
     char mA[8];
-    dtostrf(sensor_values[14], 7, 2, t);   
-    dtostrf(sensor_values[15], 7, 2, rh);         
-    snprintf(str, 64, "<h3>Outside T/RH: %sC / %sRH</h3>", t, rh);
+    dtostrf(sensor_values[14], 7, 2, t);
+    dtostrf(sensor_values[15], 7, 2, rh);
+    snprintf(str, 64, "<p>Outside T/RH: %sC / %sRH</p>", t, rh);
     s += str;
     yield();
-    
+
     // left chamber
     s += " <hr /><h3>Left Chamber</h3>";
-    dtostrf(sensor_values[10], 7, 2, t);   
-    dtostrf(sensor_values[11], 7, 2, rh);         
+    dtostrf(sensor_values[10], 7, 2, t);
+    dtostrf(sensor_values[11], 7, 2, rh);
     snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
     s += str;
-  yield();
-    dtostrf(sensor_values[8], 7, 1, mA);         
+    yield();
+    dtostrf(sensor_values[8], 7, 1, mA);
     snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
     s += str;
-     yield();
-     
+    yield();
+
     s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
     s += "<td>Thermocouple</td> <td>4</td><td>3</td><td>2</td><td>1</td></tr><tr>";
     s += "<td>Temperature, C</td>";
     yield();
-    
-    for(byte i = 0; i < 4; i++){
-      dtostrf(sensor_values[i], 7, 1, t); 
+
+    for (byte i = 0; i < 4; i++) {
+      dtostrf(sensor_values[i], 7, 1, t);
       snprintf(str, 64, "<td>%s</td>", t);
       s += str;
     }
@@ -595,29 +609,29 @@ void handleClientConnection(WiFiClient client)
 
     // right chamber
     s += " <hr /><h3>Right Chamber</h3>";
-    dtostrf(sensor_values[12], 7, 2, t);   
-    dtostrf(sensor_values[13], 7, 2, rh);         
+    dtostrf(sensor_values[12], 7, 2, t);
+    dtostrf(sensor_values[13], 7, 2, rh);
     snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
     s += str;
     yield();
-  
-    dtostrf(sensor_values[9], 7, 1, mA);         
+
+    dtostrf(sensor_values[9], 7, 1, mA);
     snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
     s += str;
-     yield();
-     
+    yield();
+
     s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
     s += "<td>Thermocouple</td> <td>8</td><td>7</td><td>6</td><td>5</td></tr><tr>";
     s += "<td>Temperature, C</td>";
     yield();
-    
-    for(byte i = 4; i < 8; i++){
-      dtostrf(sensor_values[i], 7, 1, t); 
+
+    for (byte i = 4; i < 8; i++) {
+      dtostrf(sensor_values[i], 7, 1, t);
       snprintf(str, 64, "<td>%s</td>", t);
       s += str;
     }
     s += "</tr></tbody></table>";
-    
+
   } else {
     s += "Invalid Request.<br> Try /read or /set_time.";
   }
