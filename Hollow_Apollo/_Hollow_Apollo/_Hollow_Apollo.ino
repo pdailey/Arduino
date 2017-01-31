@@ -29,8 +29,10 @@
 
 #ifdef SoftAP_ENABLED
 const char APName[] = "Hollow Apollo - US";
+//const char APName[] = "Hollow Apollo - SZ";
+//const char APName[] = "Hollow Apollo - BJ";
 const char APPass[] = "liftoff54321"; // Password
-WiFiServer server(80);
+WiFiServer server(80); // Set port
 #endif
 
 
