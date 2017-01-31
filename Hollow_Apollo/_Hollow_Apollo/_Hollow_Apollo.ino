@@ -538,16 +538,15 @@ void handleClientConnection(WiFiClient client)
   Serial.println("A client has connected.");
   // Read the first line of the request
   String req = client.readStringUntil('\r');
-  Serial.println(req);
+  //Serial.println(req);
   client.flush();
 
   // Match the request
   int val = -1; // We'll use 'val' to keep track of both the
   // request type (read/set) and value if set.
-  if (req.indexOf("/read") != -1)
+  if (req.indexOf("/") != -1)
     val = 0;
   // other values will get an error page
-
   client.flush();
 
   // Prepare the response. Start with the common header:
@@ -560,12 +559,12 @@ void handleClientConnection(WiFiClient client)
   if (val == 0)
   {
     // heading
-    s += "<h1>Hollow Apollo</h1><hr />";
+    s += "<h1>Hollow Apollo</h1><hr>";
 
     // time
     s += "<h3>Current Time: " + getTimeString(rtc.now()) + "</h3>";
     s += "<h3>Sensors Last Updated: " + getTimeString(lastSensorUpdate) + "</h3>";
-    s += "<hr />";
+    s += "<hr>";
     s += "<p>Relay Last Changed: " + getTimeString(lastRelayUpdate) + "</p>";
     s += "<p>System State: ";
     s += Relay_State_Strings[relay.state()];
@@ -584,7 +583,7 @@ void handleClientConnection(WiFiClient client)
     yield();
 
     // left chamber
-    s += " <hr /><h3>Left Chamber</h3>";
+    s += " <hr><h3>Left Chamber</h3>";
     dtostrf(sensor_values[10], 7, 2, t);
     dtostrf(sensor_values[11], 7, 2, rh);
     snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
@@ -595,7 +594,7 @@ void handleClientConnection(WiFiClient client)
     s += str;
     yield();
 
-    s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
+    s += "<table border=\"black\" width=\"226\"><tbody><tr>";
     s += "<td>Thermocouple</td> <td>4</td><td>3</td><td>2</td><td>1</td></tr><tr>";
     s += "<td>Temperature, C</td>";
     yield();
@@ -608,7 +607,7 @@ void handleClientConnection(WiFiClient client)
     s += "</tr></tbody></table>";
 
     // right chamber
-    s += " <hr /><h3>Right Chamber</h3>";
+    s += " <hr><h3>Right Chamber</h3>";
     dtostrf(sensor_values[12], 7, 2, t);
     dtostrf(sensor_values[13], 7, 2, rh);
     snprintf(str, 64, "<p>Inside T/RH: %sC / %sRH</p>", t, rh);
@@ -619,8 +618,8 @@ void handleClientConnection(WiFiClient client)
     snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
     s += str;
     yield();
-
-    s += "<table style=\"height: 70px; border-color: black;\" border=\"black\" width=\"226\"> <tbody> <tr>";
+    
+    s += "<table border=\"black\" width=\"226\"><tbody><tr>";
     s += "<td>Thermocouple</td> <td>8</td><td>7</td><td>6</td><td>5</td></tr><tr>";
     s += "<td>Temperature, C</td>";
     yield();
@@ -633,12 +632,13 @@ void handleClientConnection(WiFiClient client)
     s += "</tr></tbody></table>";
 
   } else {
-    s += "Invalid Request.<br> Try /read or /set_time.";
+    s += "Invalid Request. RTFM...";
   }
   s += "</html>\n";
 
   // Send the response to the client
   client.print(s);
+  Serial.println(s);
   yield();
   Serial.println("Client disonnected");
 
