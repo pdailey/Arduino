@@ -37,7 +37,7 @@ WiFiServer server(80); // Set port
 
 
 // Enable debugging to speed up the timer intervals
-//#define DEBUGGING
+#define DEBUGGING
 
 // NEOPIXELS
 // Strip order
@@ -56,8 +56,8 @@ uint32_t blue = pixels.Color(0, 0, 225);
 // RTC
 RTC_PCF8523 rtc;
 uint32_t unix_time;
-DateTime lastSensorUpdate;
-DateTime lastRelayUpdate;
+DateTime lastSensorUpdate = DateTime (2020, 1, 1); // set time to 00:00:00
+DateTime lastRelayUpdate = DateTime (2020, 1, 1);
 
 // SD
 const byte chipSelect = 15;
@@ -147,7 +147,7 @@ Atm_timer file_timer;
 
 #ifdef DEBUGGING
 const uint8_t sensor_interval_seconds = 15; // Seconds between readings
-const uint16_t file_interval_seconds = 300;  // seconds between file name changes
+const uint16_t file_interval_seconds = 600;  // seconds between file name changes
 #else
 const uint8_t sensor_interval_seconds = 240;   // 4 min
 const uint32_t file_interval_seconds = 259200; // 3 days
