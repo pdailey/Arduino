@@ -28,7 +28,6 @@ class Atm_Relay: public Machine {
   void action( int id );
   int pin_hp, pin_hv;
   atm_timer_millis timer_off, timer_hp, timer_hv;
-
 };
 
 /*

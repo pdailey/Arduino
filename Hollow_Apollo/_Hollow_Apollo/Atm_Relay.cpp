@@ -59,14 +59,17 @@ void Atm_Relay::action( int id ) {
     case ENT_HEAT_P:
       digitalWrite( pin_hp, RELAY_ON );
       digitalWrite( pin_hv, RELAY_OFF );
+      push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
     case ENT_HEAT_V:
       digitalWrite( pin_hp, RELAY_OFF );
       digitalWrite( pin_hv, RELAY_ON );
+      push( connectors, ON_CHANGE, 0, 1, 0 );
       return;
     case ENT_OFF:
       digitalWrite( pin_hp, RELAY_OFF );
       digitalWrite( pin_hv, RELAY_OFF );
+      push( connectors, ON_CHANGE, 0, 2, 0 );
       return;
   }
 }

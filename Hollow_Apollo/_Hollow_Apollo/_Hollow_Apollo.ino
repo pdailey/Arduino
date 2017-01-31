@@ -442,7 +442,7 @@ bool setupRelays() {
 
   relay.begin(pin_p, pin_v)   // Assign the pins to the relays
   .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
-  .onChange( relay_callback)
+  .onChange( relay_callback )
   .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
   
   
