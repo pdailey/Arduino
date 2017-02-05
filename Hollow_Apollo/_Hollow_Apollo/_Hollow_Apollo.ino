@@ -182,8 +182,7 @@ void setup() {
 
   // set the system time
   bool _status = setupRTC();
-  _status ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
-  pixels.show();
+  updateStatusLED(RTC_PIXEL, _status);
   delay(long_delay);
 
   // set the file used to write to SD
@@ -191,8 +190,7 @@ void setup() {
   delay(short_delay);
 
   _status = setupSD();
-  _status ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
-  pixels.show();
+  updateStatusLED(SD_PIXEL, _status);
   delay(long_delay);
 
   Serial.print("\tWriting file headers...\n\t\t");
@@ -203,8 +201,7 @@ void setup() {
 
 #ifdef SoftAP_ENABLED
   _status = setupAP();
-  _status ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
-  pixels.show();
+  updateStatusLED(WIFI_PIXEL, _status);
 #endif
 
   setupRelays();
@@ -259,6 +256,11 @@ String readSensors(float f[]) {
   // Read right fan current in mA
   f[9] = ina219_R.getCurrent_mA();
   delay(100);
+void updateStatusLED(enum Pixel, bool status_ok){
+  if( status_ok )
+    pixels.setPixelColor(Pixel, green)
+  else
+    pixels.setPixelColor(Pixel,  red);
 
   // Read left inside T/RH
   f[10] = sht31_L.readTemperature();
