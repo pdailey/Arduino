@@ -226,66 +226,12 @@ void loop() {
   }
 }
 
-String readSensors(float f[]) {
-  //  reset the array of values, marking unset values
-  for (int i = 0; i < 16; i++) {
-    f[i] = -404;
-  }
-
-  // read  sensors and update value in array
-  // read thermocouples in left chamber
-  for (byte i = 0; i < 4; i++) {
-    double adc = ads_L.readADC_SingleEnded(i); // read the value on the pin
-    double v = adc * 0.1875;                  // Convert value to voltage
-    f[i] = float(( v / 1000 - 1.25 ) / 0.005);   // Convert voltage to deg C
-  }
-  delay(100);
-
-  // read thermocouples in right chamber
-  for (byte i = 0; i < 4; i++) {
-    double adc = ads_R.readADC_SingleEnded(i); // read the value on the pin
-    double v = adc * 0.1875;                  // Convert value to voltage
-    f[i + 4] = float(( v / 1000 - 1.25 ) / 0.005); // Convert voltage to deg C
-  }
-  delay(100);
-
-  // Read left fan current in mA
-  f[8] = ina219_L.getCurrent_mA();
-  delay(100);
-
-  // Read right fan current in mA
-  f[9] = ina219_R.getCurrent_mA();
-  delay(100);
 void updateStatusLED(enum Pixel, bool status_ok){
   if( status_ok )
     pixels.setPixelColor(Pixel, green)
   else
     pixels.setPixelColor(Pixel,  red);
 
-  // Read left inside T/RH
-  f[10] = sht31_L.readTemperature();
-  f[11] = sht31_L.readHumidity();
-  delay(100);
-
-  // Read right inside T/RH
-  f[12] = sht31_R.readTemperature();
-  f[13] = sht31_R.readHumidity();
-  delay(100);
-
-  //Read outside T/RH
-  f[14] = am2315.readTemperature();
-  delay(100); // KEEP THIS DELAY!
-  f[15] = am2315.readHumidity();
-  delay(100);
-
-  // make a string for assembling the data to log:
-  String str = "";
-
-  for (byte i = 0; i < 16; i++) {
-    str += String(f[i], DEC) + ", ";
-  }
-
-  return str;
   // Send the updated color to the pixels
   pixels.show();
 }
