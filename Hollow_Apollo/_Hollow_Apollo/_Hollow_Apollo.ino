@@ -286,6 +286,8 @@ void updateStatusLED(enum Pixel, bool status_ok){
   }
 
   return str;
+  // Send the updated color to the pixels
+  pixels.show();
 }
 
 
