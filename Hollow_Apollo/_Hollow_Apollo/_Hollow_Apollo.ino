@@ -170,34 +170,30 @@ void setup() {
   // Keep this delay to allow easy loading of sketches when reset is pressed
   delay(5000);
 
-  // The following delay is used for dramatic effect.
-#ifdef DEBUGGING
-  int amt_delay = 1;
-#else
-  int amt_delay = 3000;
-#endif
+  int long_delay = 2000;
+  int short_delay = 100;
 
   Serial.print("\n\n\n\nInitializing Hollow Apollo...\n");
   Serial.print("=============================\n\n");
 
   // Setup the status LEDs
   setupNeopixels();
-  delay(amt_delay);
+  delay(long_delay);
 
   // set the system time
   bool _status = setupRTC();
   _status ? pixels.setPixelColor(RTC_PIXEL, red) : pixels.setPixelColor(RTC_PIXEL, green);
   pixels.show();
-  delay(amt_delay);
+  delay(long_delay);
 
   // set the file used to write to SD
   setFilename(file_name);
-  delay(100);
+  delay(short_delay);
 
   _status = setupSD();
   _status ? pixels.setPixelColor(SD_PIXEL, red) : pixels.setPixelColor(SD_PIXEL, green);
   pixels.show();
-  delay(amt_delay);
+  delay(long_delay);
 
   Serial.print("\tWriting file headers...\n\t\t");
   writeStringToSD(file_headers, file_name);
@@ -212,10 +208,10 @@ void setup() {
 #endif
 
   setupRelays();
-  delay(100);
+  delay(short_delay);
 
   setupTimers();
-  delay(100);
+  delay(short_delay);
 
   Serial.print("\n\n\n\nEntering Main Program\n");
   Serial.print("=============================\n\n");
