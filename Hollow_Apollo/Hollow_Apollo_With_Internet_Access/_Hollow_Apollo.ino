@@ -1,31 +1,3 @@
-/******************************************************************************
-HOLLOW APOLLO
-
-A control system for remote thermal cycling of samples. Logs temperature
-of heaters and T/RH inside and outside the chambers. This allows us to
-remotely monitor the fixture and ensure that everything is running.
-
-
-HARDWARE
-
-Microcontroller: ESP8266 running C++ code. The code controls
-relays that cycle heaters and fans. The code also handles the
-collection of sensor data. Sensor data is logged to an SD and displayed
-on a webpage.
-
-Sensors: 8 thermocouples (one for each heater). Temperature and
-relative humidity in each chamber. Outside temperature and relative
-humidity. DC current, one for each bank of fans.
-
-Data Storage: Sensor values are recorded to a CSV on a microSD card.
-Timestamps for values are provided by an RTC.
-
-Monitoring: 3 RGB LEDs provide the current status of RTC, SD & Wi-Fi.
-Additionally, the ESP8266 creates a Wi-Fi access point, and host a
-webpage locally showing the status and latest sensor readings.
-
- *****************************************************************************/
-
 #include <SPI.h>              // The SD card uses SPI
 #include <SD.h>               // SD Card
 #include <Wire.h>             // Used to establish I2C connections
@@ -40,60 +12,61 @@ webpage locally showing the status and latest sensor readings.
 #include <Automaton.h>        // Finite State Machine framework
 #include "Atm_Relay.h"        // Controls relay timing
 
-// Enable debugging to speed up the timer intervals for fast testing of functionality
-#define DEBUGGING
-
-// Enable SoftAP to set up a webserver to display system status
+// WiFi can be used as a secondary backup for time adjustment
+// on the RTC and to upload data to the cloud
+// WARNING! Choose either WIFI or SOFT AP, not both!
+//#define WIFI_ENABLED
 #define SoftAP_ENABLED
+
+#ifdef WIFI_ENABLED
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h> // For connection to NTP to sync time
+#endif
 
 #ifdef SoftAP_ENABLED
 #include <ESP8266WiFi.h>
+#endif
 
-const char APName[] = "Hollow Apollo"; // Wifi Network Name
-const char APPass[] = "liftoff54321";  // Password
+#ifdef SoftAP_ENABLED
+const char APName[] = "Hollow Apollo - US";
+//const char APName[] = "Hollow Apollo - SZ";
+//const char APName[] = "Hollow Apollo - BJ";
+const char APPass[] = "liftoff54321"; // Password
 WiFiServer server(80); // Set port
 #endif
 
 
-/* NEOPIXELS
-* The neopixels serve as status LEDs for different subsystems.
-*/
+// Enable debugging to speed up the timer intervals
+#define DEBUGGING
 
-// Pixel order, based upon physical connections
-enum Pixel {RTC_PIXEL, SD_PIXEL, WIFI_PIXEL};
+// NEOPIXELS
+// Strip order
+// TODO: TEST
+enum Pixels {RTC_PIXEL, SD_PIXEL, WIFI_PIXEL};
 
 // Assign number of pixels, pin and pixel type
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
 
-// Define Specific Colors (see comments for meaning of each color)
-uint32_t blue = pixels.Color(0, 0, 225);  // Loading
-uint32_t green = pixels.Color(0, 225, 0); // Ready
-uint32_t red = pixels.Color(255, 0, 0);   // Error
+// Define Specific Colors
+uint32_t red = pixels.Color(255, 0, 0);
+uint32_t green = pixels.Color(0, 225, 0);
+uint32_t blue = pixels.Color(0, 0, 225);
 
 
-/* Real Time Clock (RTC)
- *
- * The RTC provides time keeping functionality to the system. The time provided
- * by the RTC is used only to generate timestamps for sensor data, and
- * to display time to the webpage.
- *
- * Timekeeping for timers is governed by the microcontroller crystal.
- */
+// RTC
 RTC_PCF8523 rtc;
-
-DateTime lastSensorUpdate = DateTime (2020, 1, 1); // set to to 00:00:00
+uint32_t unix_time;
+DateTime lastSensorUpdate = DateTime (2020, 1, 1); // set time to 00:00:00
 DateTime lastRelayUpdate = DateTime (2020, 1, 1);
 
+// SD
+const byte chipSelect = 15;
 
-/* SD
- * The SD stores all the senor readings to a CSV file.
- */
-
-// SD file Name and header.
-// Header row is appended each time the file name is changed.
+// File Name and header
+File file;
 char file_name[] = "00000.CSV";
 
-// Define the header row
+// Define the header line for CSVs
 #define QUOTE(...) #__VA_ARGS__
 const char *file_headers = QUOTE(
                              datetime,
@@ -108,14 +81,11 @@ const char *file_headers = QUOTE(
                            );
 
 
-
 // SENSORS
-// Communication with sensors is over I2C.
-
-// Stores most recent sensor values to pass between functions
+// Store most recent sensor values to pass between functions
 float sensor_values[16] = {0};
 
-// Initialize and assign I2C addresses to senors
+// Initialize and assign addresses to senors
 Adafruit_ADS1115 ads_L(0x48);    // ADC for thermocouples
 Adafruit_ADS1115 ads_R(0x49);    // ADC for thermocouples
 
@@ -129,17 +99,38 @@ Adafruit_SHT31 sht31_R = Adafruit_SHT31(); // right inside T/RH
 Adafruit_AM2315 am2315; // AM2315 - outside T/RH
 
 
+
+// WIFI
+#ifdef WIFI_ENABLED
+//Hard-coded network and password
+const char* ssid =      "Hollow_Apollo";
+const char* password =  "liftoff54321";
+#endif
+
+// NTP
+#ifdef WIFI_ENABLED
+unsigned int ntp_port = 2390;      // local port to listen for UDP packets
+/* Don't hardwire the IP address or we won't get the benefits of the pool.
+    Lookup the IP address for the host name instead */
+IPAddress timeServerIP; // time.nist.gov NTP server address
+const char* ntpServerName = "time.nist.gov";
+const byte NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
+byte packetBuffer[ NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
+WiFiUDP Udp; // A UDP instance to let us send and receive packets over UDP
+#endif
+
+
 // RELAYS
 Atm_Relay relay;
 const char* Relay_State_Strings [] = {"HEAT LEFT", "HEAT RIGHT", "COOLING ALL"};
 
-// Pins attached to the relays
-// TODO: Change to L/R
+
+// Pins atached to the relay
 const byte pin_p = 0;
 const byte pin_v = 16;
 
+// TODO: times will change
 // time in ms for different cycles
-// TODO: Check implementation in the Relay Library
 #ifdef DEBUGGING
 const unsigned long ms_off  = 60000;
 const unsigned long ms_heat = 60000;
@@ -150,6 +141,7 @@ const unsigned long ms_heat = 900000;
 
 
 // Timers
+// TODO: Changes sensor interval
 Atm_timer sensor_timer;
 Atm_timer file_timer;
 
@@ -157,9 +149,14 @@ Atm_timer file_timer;
 const uint8_t sensor_interval_seconds = 15; // Seconds between readings
 const uint16_t file_interval_seconds = 600;  // seconds between file name changes
 #else
-// TODO: Change sensor interval
 const uint8_t sensor_interval_seconds = 240;   // 4 min
 const uint32_t file_interval_seconds = 259200; // 3 days
+#endif
+
+
+#ifdef WIFI_ENABLED
+Atm_timer rtc_timer; // RTC update using NTP
+const uint16_t rtc_interval_seconds = 3600; // 1 hour
 #endif
 
 
@@ -203,7 +200,16 @@ void setup() {
   writeStringToSD(file_headers, file_name);
 
   setupSensors();
-  delay(short_delay);
+  delay(100);
+
+#ifdef WIFI_ENABLED
+  _status = setupWifi();
+  _status ? (pixels.setPixelColor(WIFI_PIXEL, red)) : ((pixels.setPixelColor(WIFI_PIXEL, green)));
+  pixels.show();
+  if (wifi_online) {
+    setupUDP();
+  }
+#endif
 
 #ifdef SoftAP_ENABLED
   _status = setupAP();
@@ -402,15 +408,16 @@ bool setupTimers() {
   Serial.print(str);
 
 
-  sensor_timer.begin()
-  .interval_seconds(sensor_interval_seconds)
-  .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
-  .onTimer( collectSensorData )
+#ifdef WIFI_ENABLED
+  rtc_timer.begin()
+  .interval_seconds(rtc_interval_seconds)
+  .repeat( ATM_TIMER_OFF )
+  .onTimer( rtc_timer_callback )
   .start();
 
-  snprintf(str, 64, "\n\t\tSensor Timer set: readings taken every %d seconds", sensor_interval_seconds);
+  snprintf(str, 64, "\n\t\tRTC Timer set: %d seconds between adjusting RTC using NTP servers\n", rtc_interval_seconds);
   Serial.print(str);
-
+#endif
 
   Serial.print("\n\t\t...timers initialized.\n");
   return true;
@@ -426,9 +433,10 @@ void file_timer_callback( int idx, int v, int up ) {
 }
 
 
-void setFilename(char *filename) {
-  Serial.print("\tSetting file name...");
-  EEPROM.begin(12); // call EEPROM.begin(size) before you start reading or writing
+#ifdef WIFI_ENABLED
+void rtc_timer_callback( int idx, int v, int up ) {
+  adjustRTCusingNTP();
+#endif
 
 
 bool setupRelays() {
@@ -640,3 +648,122 @@ void handleClientConnection(WiFiClient client)
   // when the function returns and 'client' object is detroyed
 }
 #endif
+
+#ifdef WIFI_ENABLED
+bool adjustRTCusingNTP() {
+  //get a random server from the pool
+  WiFi.hostByName(ntpServerName, timeServerIP);
+
+  sendNTPpacket(timeServerIP); // send an NTP packet to a time server
+  unsigned long epoch = getNTP(); // get the NTP time stamp
+
+  rtc.adjust(epoch);  // set the RTC
+  return true;
+}
+#endif
+
+
+#ifdef WIFI_ENABLED
+unsigned long getNTP() {
+  sendNTPpacket(timeServerIP); // send an NTP packet to a time server
+
+  // wait to see if a reply is available
+  delay(1000);
+  if ( Udp.parsePacket() ) {
+    // We've received a packet, read the data from it
+    Udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
+
+    //the timestamp starts at byte 40 of the received packet and is four bytes,
+    // or two words, long. First, extract the two words:
+    unsigned long highWord = word(packetBuffer[40], packetBuffer[41]);
+    unsigned long lowWord = word(packetBuffer[42], packetBuffer[43]);
+
+    // combine the four bytes (two words) into a long integer
+    // this is NTP time (seconds since Jan 1 1900):
+    unsigned long secsSince1900 = highWord << 16 | lowWord;
+
+    // convert NTP time time to unix:
+    // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
+    const unsigned long seventyYears = 2208988800UL;
+    unsigned long epoch = secsSince1900 - seventyYears;
+    Serial.print("Unix time = ");
+    Serial.println(epoch);
+
+    return epoch;
+  }
+}
+#endif
+
+
+#ifdef WIFI_ENABLED
+// send an NTP request to the time server at the given address
+void sendNTPpacket(IPAddress & address) {
+  // set all bytes in the buffer to 0
+  memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  // Initialize values needed to form NTP request
+  // (see URL above for details on the packets)
+  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+  packetBuffer[1] = 0;     // Stratum, or type of clock
+  packetBuffer[2] = 6;     // Polling Interval
+  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  // 8 bytes of zero for Root Delay & Root Dispersion
+  packetBuffer[12]  = 49;
+  packetBuffer[13]  = 0x4E;
+  packetBuffer[14]  = 49;
+  packetBuffer[15]  = 52;
+
+  // all NTP fields have been given values, now
+  // you can send a packet requesting a time stamp:
+  Udp.beginPacket(address, 123); //NTP requests are to port 123
+  Udp.write(packetBuffer, NTP_PACKET_SIZE);
+  Udp.endPacket();
+}
+#endif
+
+
+#ifdef WIFI_ENABLED
+bool setupWifi() {
+  Serial.print("\n\Initiailzing wifi connection to network...");
+  Serial.println(ssid);
+
+  if (WiFi.status() != WL_CONNECTED) {  // FIX FOR USING 2.3.0 CORE (only .begin if not connected)
+    WiFi.begin(ssid, password);       // connect to the network
+  }
+
+  byte count;
+  for ( count = 0; count < 20 ; count++ )  {
+    delay(500);
+    Serial.print( "\t\t" ); Serial.print( count );
+    Serial.print( " WifiStat: " ); Serial.println( WiFi.status() );
+    if ( WiFi.status() == WL_CONNECTED ) {
+      break;
+    }
+  }
+
+  if ( count < 20 ) {
+    Serial.println("\nWiFi connected");
+    return true;
+  } else {
+    Serial.println("Client NOT connected!");
+
+    // create a SoftAP for access
+    //WiFi.softAP(ESPssid, ESPpassword);
+    // etc..........
+    return false;
+  }
+}
+#endif
+
+
+#ifdef WIFI_ENABLED
+bool setupUDP() {
+  Serial.println("Starting UDP");
+  Udp.begin(ntp_port);
+  Serial.print("NTP port: ");
+  Serial.println(Udp.localPort());
+  return true;
+}
+#endif
+
+
+
