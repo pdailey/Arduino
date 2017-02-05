@@ -237,6 +237,7 @@ void updateStatusLED(enum Pixel, bool status_ok){
 }
 
 
+
 bool writeStringToSD(String str, char *file_name) {
   File file = SD.open(file_name, FILE_WRITE);
 
@@ -325,20 +326,49 @@ bool setupSensors() {
   return true;
 }
 
+#ifdef SoftAP_ENABLED
+bool setupAP() {
+  Serial.print("\tInitiailzing Access Point...");
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(APName, APPass);
+  yield();
+
+  server.begin();
+  Serial.print("Access Point established. Connect at:");
+
+  char str [64];
+  snprintf(str, 64, "\n\t\tNetwork:  %s \n\t\tPassword: %s\n", APName, APPass);
+  Serial.print(str);
+  return true;
+}
+#endif
+
+
+bool setupRelays() {
+  Serial.print("\tInitializing Relays...");
+
+  relay.begin(pin_p, pin_v)   // Assign the pins to the relays
+  .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
+  .onChange( relay_callback )
+  .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
+
+
+  char str [64];
+  byte min_heat = ms_heat / (60 * 1000);
+  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the 2 heater banks alternate to keep power consumption low. A complete cycle is 1 off + 2 heats.
+  snprintf(str, 64, "\n\t\tRelays set: Heat %d min, Cool %d min.\n", min_heat, min_off);
+  Serial.print(str);
+  return true;
+}
+
+void relay_callback( int idx, int v, int up ) {
+  lastRelayUpdate = rtc.now();
+}
+
 
 bool setupTimers() {
   Serial.print("\tInitializing Timers...");
   char str [64];
-
-  sensor_timer.begin()
-  .interval_seconds(sensor_interval_seconds)
-  .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
-  .onTimer( collectSensorData )
-  .start();
-
-  snprintf(str, 64, "\n\t\tSensor Timer set: readings taken every %d seconds", sensor_interval_seconds);
-  Serial.print(str);
-
 
   file_timer.begin()
   .interval_seconds(file_interval_seconds)
@@ -366,71 +396,11 @@ bool setupTimers() {
 
 
 void file_timer_callback( int idx, int v, int up ) {
-  // Set the new filename
+  // Set the new filename.
   setFilename(file_name);
 
   // Write the headers to the new file
   writeStringToSD(file_headers, file_name);
-}
-
-
-void setFilename(char *filename) {
-  Serial.print("\tSetting file name...");
-  EEPROM.begin(12); // call EEPROM.begin(size) before you start reading or writing
-
-
-bool setupRelays() {
-  Serial.print("\tInitializing Relays...");
-
-  relay.begin(pin_p, pin_v)   // Assign the pins to the relays
-  .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
-  .onChange( relay_callback )
-  .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
-  
-  
-  char str [64];
-  byte min_heat = ms_heat / (60 * 1000);
-  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the 2 heater banks alternate to keep power consumption low. A complete cycle is 1 off + 2 heats.
-  snprintf(str, 64, "\n\t\tRelays set: Heat %d min, Cool %d min.\n", min_heat, min_off);
-  Serial.print(str);
-  return true;
-}
-
-void relay_callback( int idx, int v, int up ) {
-  lastRelayUpdate = rtc.now();
-}
-
-void collectSensorData( int idx, int v, int up ) {
-  // read the sensor data and save it to a string
-  String data = readSensors(sensor_values);
-  String timeStamp = getUnixTimeFromRTC();
-  String str = timeStamp + ", " + data;
-
-  lastSensorUpdate = rtc.now();
-
-  // save the data to the SD
-  bool ok = writeStringToSD(str, file_name);
-  ok ? (pixels.setPixelColor(SD_PIXEL, red)) : (pixels.setPixelColor(SD_PIXEL, green));
-  pixels.show();
-}
-
-
-String getDateTimeString(DateTime t) {
-  char str [19];
-  snprintf(str, 19, "%04d/%02d/%02d %02d:%02d:%02d",
-           t.year(), t.month(), t.day(), t.hour(), t.minute(), t.second());
-  return str;
-}
-
-String getTimeString(DateTime t) {
-  char str [12];
-  snprintf(str, 12, "%02d:%02d:%02d", t.hour(), t.minute(), t.second());
-  return str;
-}
-
-String getUnixTimeFromRTC() {
-  DateTime now = rtc.now();
-  return String(now.unixtime(), DEC);
 }
 
 
@@ -457,22 +427,95 @@ void setFilename(char *filename) {
   EEPROM.end();
 }
 
-#ifdef SoftAP_ENABLED
-bool setupAP() {
-  Serial.print("\tInitiailzing Access Point...");
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(APName, APPass);
-  yield();
 
-  server.begin();
-  Serial.print("Access Point established. Connect at:");
+void collectSensorData( int idx, int v, int up ) {
+  // read the sensor data and save it to a string
+  String data = readSensors(sensor_values);
+  String timeStamp = getUnixTimeFromRTC();
+  String str = timeStamp + ", " + data;
 
-  char str [64];
-  snprintf(str, 64, "\n\t\tNetwork:  %s \n\t\tPassword: %s\n", APName, APPass);
-  Serial.print(str);
-  return true;
+  lastSensorUpdate = rtc.now();
+
+  // save the data to the SD
+  bool write_ok = writeStringToSD(str, file_name);
+  updateStatusLED(SD_PIXEL, write_ok);
 }
-#endif
+
+String readSensors(float f[]) {
+  //  reset the array of values, marking unset values
+  for (int i = 0; i < 16; i++) {
+    f[i] = -404;
+  }
+
+  // read  sensors and update value in array
+  // read thermocouples in left chamber
+  for (byte i = 0; i < 4; i++) {
+    double adc = ads_L.readADC_SingleEnded(i); // read the value on the pin
+    double v = adc * 0.1875;                  // Convert value to voltage
+    f[i] = float(( v / 1000 - 1.25 ) / 0.005);   // Convert voltage to deg C
+  }
+  delay(100);
+
+  // read thermocouples in right chamber
+  for (byte i = 0; i < 4; i++) {
+    double adc = ads_R.readADC_SingleEnded(i); // read the value on the pin
+    double v = adc * 0.1875;                  // Convert value to voltage
+    f[i + 4] = float(( v / 1000 - 1.25 ) / 0.005); // Convert voltage to deg C
+  }
+  delay(100);
+
+  // Read left fan current in mA
+  f[8] = ina219_L.getCurrent_mA();
+  delay(100);
+
+  // Read right fan current in mA
+  f[9] = ina219_R.getCurrent_mA();
+  delay(100);
+
+  // Read left inside T/RH
+  f[10] = sht31_L.readTemperature();
+  f[11] = sht31_L.readHumidity();
+  delay(100);
+
+  // Read right inside T/RH
+  f[12] = sht31_R.readTemperature();
+  f[13] = sht31_R.readHumidity();
+  delay(100);
+
+  //Read outside T/RH
+  f[14] = am2315.readTemperature();
+  delay(100); // KEEP THIS DELAY!
+  f[15] = am2315.readHumidity();
+  delay(100);
+
+  // make a string for assembling the data to log:
+  String str = "";
+
+  for (byte i = 0; i < 16; i++) {
+    str += String(f[i], DEC) + ", ";
+  }
+
+  return str;
+}
+
+String getDateTimeString(DateTime t) {
+  char str [19];
+  snprintf(str, 19, "%04d/%02d/%02d %02d:%02d:%02d",
+           t.year(), t.month(), t.day(), t.hour(), t.minute(), t.second());
+  return str;
+}
+
+String getTimeString(DateTime t) {
+  char str [12];
+  snprintf(str, 12, "%02d:%02d:%02d", t.hour(), t.minute(), t.second());
+  return str;
+}
+
+String getUnixTimeFromRTC() {
+  DateTime now = rtc.now();
+  return String(now.unixtime(), DEC);
+}
+
 
 #ifdef SoftAP_ENABLED
 void handleClientConnection(WiFiClient client)
@@ -560,7 +603,7 @@ void handleClientConnection(WiFiClient client)
     snprintf(str, 64, "<p>Fans: %s mA</p>", mA);
     s += str;
     yield();
-    
+
     s += "<table border=\"black\" width=\"226\"><tbody><tr>";
     s += "<td>Thermocouple</td> <td>8</td><td>7</td><td>6</td><td>5</td></tr><tr>";
     s += "<td>Temperature, C</td>";
