@@ -55,15 +55,10 @@ uint32_t blue = pixels.Color(0, 0, 225);
 
 // RTC
 RTC_PCF8523 rtc;
-uint32_t unix_time;
 DateTime lastSensorUpdate = DateTime (2020, 1, 1); // set time to 00:00:00
 DateTime lastRelayUpdate = DateTime (2020, 1, 1);
 
-// SD
-const byte chipSelect = 15;
 
-// File Name and header
-File file;
 char file_name[] = "00000.CSV";
 
 // Define the header line for CSVs
