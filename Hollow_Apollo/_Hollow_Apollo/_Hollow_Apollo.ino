@@ -267,19 +267,6 @@ bool setupNeopixels() {
 }
 
 
-bool setupSD() {
-  Serial.print("\tInitializing SD card...");
-  // see if the card is present and can be initialized:
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    return false;
-  } else {
-    Serial.println("Card initialized.");
-    return true;
-  }
-}
-
-
 bool setupRTC() {
   Serial.print("\tInitializing RTC...");
   delay(100);
@@ -296,6 +283,22 @@ bool setupRTC() {
   } else {
     Serial.print("RTC is running.\n\t\t");
     Serial.println(getDateTimeString(rtc.now()));
+    return true;
+  }
+}
+
+
+bool setupSD() {
+  Serial.print("\tInitializing SD card...");
+
+  byte chipSelectPin = 15;
+
+  // see if the card is present and can be initialized:
+  if (!SD.begin(chipSelectPin)) {
+    Serial.println("Card failed, or not present");
+    return false;
+  } else {
+    Serial.println("Card initialized.");
     return true;
   }
 }
