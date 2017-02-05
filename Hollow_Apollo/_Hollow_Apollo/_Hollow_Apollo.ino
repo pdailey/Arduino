@@ -33,7 +33,7 @@ webpage locally showing the status and latest sensor readings.
 #include <stdio.h>            // This program uses the sprintf function
 #include "RTClib.h"           // RTC
 #include <Adafruit_ADS1015.h> // ADC for thermocouples
-#include <Adafruit_INA219.h>  // current sensor for fan
+#include <Adafruit_INA219.h>  // current sensor for fans
 #include <Adafruit_AM2315.h>  // outside T/RH sensor
 #include "Adafruit_SHT31.h"   // inside T/RH sensor
 #include <Adafruit_NeoPixel.h>// Status LEDs
@@ -223,14 +223,13 @@ void setup() {
 }
 
 void loop() {
-
   // Handles the timers and relays using the automaton framework
   automaton.run();
 
-  // Check if a client has connected
+  // Check if a client has connected to the access point
   WiFiClient client = server.available();
   if (client) {
-    handleClientConnection(client);
+    handleClientConnection(client); // Serve a webpage
   }
 }
 
