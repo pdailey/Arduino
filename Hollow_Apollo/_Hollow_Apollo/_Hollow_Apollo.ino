@@ -500,15 +500,15 @@ String readSensors(float f[]) {
 }
 
 String getDateTimeString(DateTime t) {
-  char str [19];
-  snprintf(str, 19, "%04d/%02d/%02d %02d:%02d:%02d",
+  char str [32];
+  snprintf(str, 32, "%04d/%02d/%02d %02d:%02d:%02d",
            t.year(), t.month(), t.day(), t.hour(), t.minute(), t.second());
   return str;
 }
 
 String getTimeString(DateTime t) {
-  char str [12];
-  snprintf(str, 12, "%02d:%02d:%02d", t.hour(), t.minute(), t.second());
+  char str [32];
+  snprintf(str, 32, "%02d:%02d:%02d", t.hour(), t.minute(), t.second());
   return str;
 }
 
