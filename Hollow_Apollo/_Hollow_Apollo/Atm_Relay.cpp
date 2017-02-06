@@ -6,27 +6,27 @@
 #define RELAY_ON 0
 #define RELAY_OFF 1
 
-Atm_Relay& Atm_Relay::begin(int pin_hp, int pin_hv)  {
+Atm_Relay& Atm_Relay::begin(int pin_left, int pin_right)  {
   // clang-format off
   const static state_t state_table[] PROGMEM = {
-    /*             ON_ENTER  ON_LOOP  ON_EXIT  EVT_HEAT_P  EVT_HEAT_V  EVT_OFF  EVT_TIMER_HP  EVT_TIMER_HV  EVT_TIMER_OFF  EVT_NEXT  ELSE */
-    /* HEAT_P */ ENT_HEAT_P,      -1,      -1,         -1,     HEAT_V,     OFF,       HEAT_V,           -1,            -1,   HEAT_V,   -1,
-    /* HEAT_V */ ENT_HEAT_V,      -1,      -1,     HEAT_P,         -1,     OFF,           -1,          OFF,            -1,      OFF,   -1,
-    /*    OFF */    ENT_OFF,      -1,      -1,     HEAT_P,     HEAT_V,      -1,           -1,           -1,        HEAT_P,   HEAT_P,   -1,
+    /*                     ON_ENTER  ON_LOOP  ON_EXIT  EVT_TIMER_L  EVT_TIMER_R  EVT_TIMER_OFF    EVT_NEXT  EVT_HEAT_LEFT  EVT_HEAT_RIGHT   EVT_OFF  ELSE */
+    /*  HEAT_LEFT */  ENT_HEAT_LEFT,      -1,      -1,  HEAT_RIGHT,          -1,            -1, HEAT_RIGHT,            -1,     HEAT_RIGHT, BOTH_OFF,   -1,
+    /* HEAT_RIGHT */ ENT_HEAT_RIGHT,      -1,      -1,          -1,    BOTH_OFF,            -1,   BOTH_OFF,     HEAT_LEFT,             -1, BOTH_OFF,   -1,
+    /*   BOTH_OFF */   ENT_BOTH_OFF,      -1,      -1,          -1,          -1,     HEAT_LEFT,  HEAT_LEFT,     HEAT_LEFT,     HEAT_RIGHT,       -1,   -1,
   };
   // clang-format on
   Machine::begin( state_table, ELSE );
-  this->pin_hp = pin_hp; // Save the pins
-  this->pin_hv = pin_hv;
+  this->pin_left = pin_left; // Save the pins
+  this->pin_right = pin_right;
 
-  digitalWrite( pin_hp, RELAY_OFF ); // Set the pin modes
-  digitalWrite( pin_hv, RELAY_OFF );
+  digitalWrite( pin_left, RELAY_OFF ); // Set the pin modes
+  digitalWrite( pin_right, RELAY_OFF );
 
-  pinMode( pin_hp, OUTPUT ); // Set the pin modes
-  pinMode( pin_hv, OUTPUT );
+  pinMode( pin_left, OUTPUT ); // Set the pin modes
+  pinMode( pin_right, OUTPUT );
 
-  timer_hp.set( -1 ); // Initialize the timers
-  timer_hv.set( -1 );
+  timer_l.set( -1 ); // Initialize the timers
+  timer_r.set( -1 );
   timer_off.set( -1 );
   return *this;
 }
@@ -37,10 +37,10 @@ Atm_Relay& Atm_Relay::begin(int pin_hp, int pin_hv)  {
 
 int Atm_Relay::event( int id ) {
   switch ( id ) {
-    case EVT_TIMER_HP:
-      return timer_hp.expired(this);
-    case EVT_TIMER_HV:
-      return timer_hv.expired(this);
+    case EVT_TIMER_L:
+      return timer_l.expired(this);
+    case EVT_TIMER_R:
+      return timer_r.expired(this);
     case EVT_TIMER_OFF:
       return timer_off.expired(this);
   }
@@ -56,28 +56,28 @@ int Atm_Relay::event( int id ) {
 
 void Atm_Relay::action( int id ) {
   switch ( id ) {
-    case ENT_HEAT_P:
-      digitalWrite( pin_hp, RELAY_ON );
-      digitalWrite( pin_hv, RELAY_OFF );
+    case ENT_HEAT_LEFT:
+      digitalWrite( pin_left, RELAY_ON );
+      digitalWrite( pin_right, RELAY_OFF );
       push( connectors, ON_CHANGE, 0, 0, 0 );
       return;
-    case ENT_HEAT_V:
-      digitalWrite( pin_hp, RELAY_OFF );
-      digitalWrite( pin_hv, RELAY_ON );
+    case ENT_HEAT_RIGHT:
+      digitalWrite( pin_left, RELAY_OFF );
+      digitalWrite( pin_right, RELAY_ON );
       push( connectors, ON_CHANGE, 0, 1, 0 );
       return;
-    case ENT_OFF:
-      digitalWrite( pin_hp, RELAY_OFF );
-      digitalWrite( pin_hv, RELAY_OFF );
+    case ENT_BOTH_OFF:
+      digitalWrite( pin_left, RELAY_OFF );
+      digitalWrite( pin_right, RELAY_OFF );
       push( connectors, ON_CHANGE, 0, 2, 0 );
       return;
   }
 }
 
-Atm_Relay& Atm_Relay::automatic( unsigned long h, unsigned long o ) {
-  timer_hp.set( h );
-  timer_hv.set( h );
-  timer_off.set( o );
+Atm_Relay& Atm_Relay::automatic( unsigned long heat, unsigned long off ) {
+  timer_l.set( heat );
+  timer_r.set( heat );
+  timer_off.set( off - heat ); // chambers are staggered. heat and off is in time per heater. off is an all off state.
   return *this;
 }
 
@@ -104,25 +104,23 @@ int Atm_Relay::state( void ) {
 
 /* Public event methods
 
-*/
-
-Atm_Relay& Atm_Relay::heat_p() {
-  trigger( EVT_HEAT_P );
+Atm_Relay& Atm_Relay::next() {
+  trigger( EVT_NEXT );
   return *this;
 }
 
-Atm_Relay& Atm_Relay::heat_v() {
-  trigger( EVT_HEAT_V );
+Atm_Relay& Atm_Relay::heat_left() {
+  trigger( EVT_HEAT_LEFT );
+  return *this;
+}
+
+Atm_Relay& Atm_Relay::heat_right() {
+  trigger( EVT_HEAT_RIGHT );
   return *this;
 }
 
 Atm_Relay& Atm_Relay::off() {
   trigger( EVT_OFF );
-  return *this;
-}
-
-Atm_Relay& Atm_Relay::next() {
-  trigger( EVT_NEXT );
   return *this;
 }
 
@@ -146,6 +144,6 @@ Atm_Relay& Atm_Relay::onChange( atm_cb_push_t callback, int idx ) {
 
 Atm_Relay& Atm_Relay::trace( Stream & stream ) {
   Machine::setTrace( &stream, atm_serial_debug::trace,
-                     "RELAY\0EVT_HEAT_P\0EVT_HEAT_V\0EVT_OFF\0EVT_TIMER_HP\0EVT_TIMER_HV\0EVT_TIMER_OFF\0EVT_NEXT\0ELSE\0HEAT_P\0HEAT_V\0OFF" );
+    "RELAY\0EVT_TIMER_L\0EVT_TIMER_R\0EVT_TIMER_OFF\0EVT_NEXT\0EVT_HEAT_LEFT\0EVT_HEAT_RIGHT\0EVT_OFF\0ELSE\0HEAT_LEFT\0HEAT_RIGHT\0BOTH_OFF" );
   return *this;
 }
