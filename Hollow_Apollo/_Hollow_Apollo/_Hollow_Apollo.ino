@@ -49,7 +49,10 @@
 #ifdef SoftAP_ENABLED
 #include <ESP8266WiFi.h>
 
-const char APName[] = "Hollow Apollo"; // Wifi Network Name
+const char APName[] = "Hollow Apollo - US"; // Wifi Network Name
+//const char APName[] = "Hollow Apollo - SZ"; // Wifi Network Name
+//const char APName[] = "Hollow Apollo - BJ"; // Wifi Network Name
+
 const char APPass[] = "liftoff54321";  // Password
 WiFiServer server(80);                 // Port
 #endif
