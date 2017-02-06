@@ -226,11 +226,9 @@ void loop() {
 }
 
 void updateStatusLED(int pixel, bool status_ok) {
-  if( status_ok )
-    pixels.setPixelColor(Pixel, green)
-  else
-    pixels.setPixelColor(Pixel,  red);
-
+  if (status_ok) pixels.setPixelColor(pixel, green);
+  else pixels.setPixelColor(pixel, red);
+  
   // Send the updated color to the pixels
   pixels.show();
 }
