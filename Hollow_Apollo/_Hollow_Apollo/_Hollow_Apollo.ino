@@ -225,7 +225,7 @@ void loop() {
   }
 }
 
-void updateStatusLED(enum Pixel, bool status_ok){
+void updateStatusLED(int pixel, bool status_ok) {
   if( status_ok )
     pixels.setPixelColor(Pixel, green)
   else
