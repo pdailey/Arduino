@@ -140,8 +140,8 @@ const byte pin_right = 16;
 // time in ms for different cycles
 // TODO: Check implementation in the Relay Library
 #ifdef DEBUGGING
-const unsigned long ms_off  = 60000;
-const unsigned long ms_heat = 60000;
+const unsigned long ms_off  = 180000;
+const unsigned long ms_heat =  60000;
 #else
 const unsigned long ms_off  = 4500000;
 const unsigned long ms_heat = 900000;
@@ -361,6 +361,10 @@ bool setupRelays() {
 
 void relay_callback( int idx, int v, int up ) {
   lastRelayUpdate = rtc.now();
+ 
+  Serial.println("Relay Changed");
+  String str = getDateTimeString(lastRelayUpdate);
+  Serial.println(str);
 }
 
 
