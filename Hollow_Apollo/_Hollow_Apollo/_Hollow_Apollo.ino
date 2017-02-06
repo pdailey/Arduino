@@ -354,7 +354,7 @@ bool setupRelays() {
 
   char str [64];
   byte min_heat = ms_heat / (60 * 1000);
-  byte min_off  = ms_off  / (60 * 1000) + min_heat; // the 2 heater banks alternate to keep power consumption low. A complete cycle is 1 off + 2 heats.
+  byte min_off  = ms_off  / (60 * 1000); // the 2 heater banks alternate to keep power consumption low. A complete cycle is 1 off + 2 heats.
   snprintf(str, 64, "\n\t\tRelays set: Heat %d min, Cool %d min.\n", min_heat, min_off);
   Serial.print(str);
   return true;
