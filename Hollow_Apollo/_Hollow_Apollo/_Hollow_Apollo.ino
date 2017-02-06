@@ -60,7 +60,7 @@ WiFiServer server(80);                 // Port
 */
 
 // Pixel order, based upon physical connections
-enum Pixel {RTC_PIXEL, SD_PIXEL, WIFI_PIXEL};
+enum Pixel {RTC_PIXEL=0, SD_PIXEL=1, WIFI_PIXEL=2};
 
 // Assign number of pixels, pin and pixel type
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
@@ -234,7 +234,6 @@ void updateStatusLED(int pixel, bool status_ok) {
 }
 
 
-
 bool writeStringToSD(String str, char *file_name) {
   File file = SD.open(file_name, FILE_WRITE);
 
@@ -374,7 +373,7 @@ bool setupTimers() {
 
   file_timer.begin()
   .interval_seconds(file_interval_seconds)
-  .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
+  .repeat( ATM_COUNTER_OFF  )      // Set timer to run continuously
   .onTimer( file_timer_callback )
   .start();
 
@@ -384,7 +383,7 @@ bool setupTimers() {
 
   sensor_timer.begin()
   .interval_seconds(sensor_interval_seconds)
-  .repeat( ATM_TIMER_OFF )      // Set timer to run continuously
+  .repeat( ATM_COUNTER_OFF  )      // Set timer to run continuously
   .onTimer( collectSensorData )
   .start();
 
