@@ -134,9 +134,8 @@ Atm_Relay relay;
 const char* Relay_State_Strings [] = {"HEAT LEFT", "HEAT RIGHT", "COOLING ALL"};
 
 // Pins attached to the relays
-// TODO: Change to L/R
-const byte pin_p = 0;
-const byte pin_v = 16;
+const byte pin_left = 0;
+const byte pin_right = 16;
 
 // time in ms for different cycles
 // TODO: Check implementation in the Relay Library
@@ -347,8 +346,8 @@ bool setupAP() {
 bool setupRelays() {
   Serial.print("\tInitializing Relays...");
 
-  relay.begin(pin_p, pin_v)   // Assign the pins to the relays
-  .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle.
+  relay.begin(pin_left, pin_right)   // Assign the pins to the relays
+  .automatic(ms_heat, ms_off) // Set the time of the cooling and heating cycle for a single chamber
   .onChange( relay_callback )
   .trigger(relay.EVT_HEAT_P); // Run the heating cycles first
 
