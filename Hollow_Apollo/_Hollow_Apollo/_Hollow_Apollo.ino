@@ -1,28 +1,28 @@
 /******************************************************************************
-HOLLOW APOLLO
+  HOLLOW APOLLO
 
-A control system for remote thermal cycling of samples. Logs temperature
-of heaters and T/RH inside and outside the chambers. This allows us to
-remotely monitor the fixture and ensure that everything is running.
+  A control system for remote thermal cycling of samples. Logs temperature
+  of heaters and T/RH inside and outside the chambers. This allows us to
+  remotely monitor the fixture and ensure that everything is running.
 
 
-HARDWARE
+  HARDWARE
 
-Microcontroller: ESP8266 running C++ code. The code controls
-relays that cycle heaters and fans. The code also handles the
-collection of sensor data. Sensor data is logged to an SD and displayed
-on a webpage.
+  Microcontroller: ESP8266 running C++ code. The code controls
+  relays that cycle heaters and fans. The code also handles the
+  collection of sensor data. Sensor data is logged to an SD and displayed
+  on a webpage.
 
-Sensors: 8 thermocouples (one for each heater). Temperature and
-relative humidity in each chamber. Outside temperature and relative
-humidity. DC current, one for each bank of fans.
+  Sensors: 8 thermocouples (one for each heater). Temperature and
+  relative humidity in each chamber. Outside temperature and relative
+  humidity. DC current, one for each bank of fans.
 
-Data Storage: Sensor values are recorded to a CSV on a microSD card.
-Timestamps for values are provided by an RTC.
+  Data Storage: Sensor values are recorded to a CSV on a microSD card.
+  Timestamps for values are provided by an RTC.
 
-Monitoring: 3 RGB LEDs provide the current status of RTC, SD & Wi-Fi.
-Additionally, the ESP8266 creates a Wi-Fi access point, and host a
-webpage locally showing the status and latest sensor readings.
+  Monitoring: 3 RGB LEDs provide the current status of RTC, SD & Wi-Fi.
+  Additionally, the ESP8266 creates a Wi-Fi access point, and host a
+  webpage locally showing the status and latest sensor readings.
 
  *****************************************************************************/
 
@@ -51,12 +51,12 @@ webpage locally showing the status and latest sensor readings.
 
 const char APName[] = "Hollow Apollo"; // Wifi Network Name
 const char APPass[] = "liftoff54321";  // Password
-WiFiServer server(80); // Set port
+WiFiServer server(80);                 // Port
 #endif
 
 
 /* NEOPIXELS
-* The neopixels serve as status LEDs for different subsystems.
+  The neopixels serve as status LEDs for different subsystems.
 */
 
 // Pixel order, based upon physical connections
@@ -72,13 +72,13 @@ uint32_t red = pixels.Color(255, 0, 0);   // Error
 
 
 /* Real Time Clock (RTC)
- *
- * The RTC provides time keeping functionality to the system. The time provided
- * by the RTC is used only to generate timestamps for sensor data, and
- * to display time to the webpage.
- *
- * Timekeeping for timers is governed by the microcontroller crystal.
- */
+
+   The RTC provides time keeping functionality to the system. The time provided
+   by the RTC is used only to generate timestamps for sensor data, and
+   to display time to the webpage.
+
+   Timekeeping for timers is governed by the microcontroller crystal.
+*/
 RTC_PCF8523 rtc;
 
 DateTime lastSensorUpdate = DateTime (2020, 1, 1); // set to to 00:00:00
@@ -86,8 +86,8 @@ DateTime lastRelayUpdate = DateTime (2020, 1, 1);
 
 
 /* SD
- * The SD stores all the senor readings to a CSV file.
- */
+   The SD stores all the senor readings to a CSV file.
+*/
 
 // SD file Name and header.
 // Header row is appended each time the file name is changed.
