@@ -9,7 +9,7 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(0, OUTPUT);
-  digitalWrite(13, HIGH);
+  digitalWrite(0, HIGH);
 
   EEPROM.begin(512);
   // write a 0 to all 512 bytes of the EEPROM

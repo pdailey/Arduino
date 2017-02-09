@@ -69,9 +69,11 @@ enum Pixel {RTC_PIXEL=0, SD_PIXEL=1, WIFI_PIXEL=2};
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
 
 // Define Specific Colors (see comments for meaning of each color)
-uint32_t blue = pixels.Color(0, 0, 225);  // Loading
-uint32_t green = pixels.Color(0, 225, 0); // Ready
-uint32_t red = pixels.Color(255, 0, 0);   // Error
+// Syntax: pixels.Color(red, green, blue)
+uint32_t red =   pixels.Color(255, 0, 0);   // Error
+uint32_t green = pixels.Color(0, 255, 0);  // Ready
+uint32_t blue =  pixels.Color(0, 0, 255); // Loading
+
 
 
 /* Real Time Clock (RTC)
@@ -143,11 +145,11 @@ const byte pin_right = 16;
 // time in ms for different cycles
 // TODO: Check implementation in the Relay Library
 #ifdef DEBUGGING
-const unsigned long ms_off  = 180000;
-const unsigned long ms_heat =  60000;
+const unsigned long ms_off  = 180000; // 3 min
+const unsigned long ms_heat =  60000; // 1 min
 #else
-const unsigned long ms_off  = 4500000;
-const unsigned long ms_heat = 900000;
+const unsigned long ms_off  = 5400000; // 90 min
+const unsigned long ms_heat = 900000;  // 15 min
 #endif
 
 
@@ -157,7 +159,7 @@ Atm_timer file_timer;
 
 #ifdef DEBUGGING
 const uint8_t sensor_interval_seconds = 15; // Seconds between readings
-const uint16_t file_interval_seconds = 600;  // seconds between file name changes
+const uint16_t file_interval_seconds = 1200;  // seconds between file name changes
 #else
 // TODO: Change sensor interval
 const uint8_t sensor_interval_seconds = 240;   // 4 min
@@ -316,11 +318,11 @@ bool setupSensors() {
   ina219_R.begin();
   ina219_R.setCalibration_32V_1A();
 
-  sht31_L.begin(0x44);
-  sht31_R.begin(0x45);
+  //sht31_L.begin(0x44);
+  //sht31_R.begin(0x45);
 
   // Outside T/RH
-  am2315.begin();
+  //am2315.begin();
   Serial.print("sensors initialized.\n");
   return true;
 }
@@ -363,10 +365,12 @@ bool setupRelays() {
 
 void relay_callback( int idx, int v, int up ) {
   lastRelayUpdate = rtc.now();
- 
+
+  #ifdef DEBUGGING
   Serial.println("Relay Changed");
   String str = getDateTimeString(lastRelayUpdate);
   Serial.println(str);
+  #endif
 }
 
 
@@ -477,19 +481,19 @@ String readSensors(float f[]) {
   delay(100);
 
   // Read left inside T/RH
-  f[10] = sht31_L.readTemperature();
-  f[11] = sht31_L.readHumidity();
+  //f[10] = sht31_L.readTemperature();
+  //f[11] = sht31_L.readHumidity();
   delay(100);
 
   // Read right inside T/RH
-  f[12] = sht31_R.readTemperature();
-  f[13] = sht31_R.readHumidity();
+  //f[12] = sht31_R.readTemperature();
+  //f[13] = sht31_R.readHumidity();
   delay(100);
 
   //Read outside T/RH
-  f[14] = am2315.readTemperature();
+  //f[14] = am2315.readTemperature();
   delay(100); // KEEP THIS DELAY!
-  f[15] = am2315.readHumidity();
+  //f[15] = am2315.readHumidity();
   delay(100);
 
   // make a string for assembling the data to log:
