@@ -70,8 +70,8 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
 
 // Define Specific Colors (see comments for meaning of each color)
 // Syntax: pixels.Color(red, green, blue)
-uint32_t red =   pixels.Color(255, 0, 0);   // Error
-uint32_t green = pixels.Color(0, 255, 0);  // Ready
+uint32_t red =   pixels.Color(0, 255, 0);   // Error
+uint32_t green = pixels.Color(255, 0, 0);  // Ready
 uint32_t blue =  pixels.Color(0, 0, 255); // Loading
 
 
@@ -231,8 +231,14 @@ void loop() {
 }
 
 void updateStatusLED(int pixel, bool status_ok) {
-  if (status_ok) pixels.setPixelColor(pixel, green);
-  else pixels.setPixelColor(pixel, red);
+  if (status_ok) {
+    Serial.println("OK");
+    pixels.setPixelColor(pixel, green);
+  }
+  else {
+    Serial.println("Not OK");
+    pixels.setPixelColor(pixel, red);
+  }
   
   // Send the updated color to the pixels
   pixels.show();
