@@ -19,7 +19,7 @@ Atm_Relay relay;
 // Time that the cycles will be on. Can handle 4,294,967,294 ms or ~50 Days
 // time entered in ms
 const unsigned long ms_cool = 5400000;
-const unsigned long ms_heat = 900000;
+const unsigned long ms_heat = 3600000;
 
 // Pins atached to the relay
 const byte heat_pin_1 = 8;

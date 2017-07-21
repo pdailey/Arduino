@@ -41,7 +41,7 @@
 #include "Atm_Relay.h"        // Controls relay timing
 
 // Enable debugging to speed up the timer intervals for fast testing of functionality
-#define DEBUGGING
+//#define DEBUGGING
 
 // Enable SoftAP to set up a webserver to display system status
 #define SoftAP_ENABLED
@@ -49,9 +49,14 @@
 #ifdef SoftAP_ENABLED
 #include <ESP8266WiFi.h>
 
-const char APName[] = "Hollow Apollo - US"; // Wifi Network Name
+//const char APName[] = "Hollow Apollo - US"; // Wifi Network Name
+//const char loc[] = "US";
+
 //const char APName[] = "Hollow Apollo - SZ"; // Wifi Network Name
-//const char APName[] = "Hollow Apollo - BJ"; // Wifi Network Name
+//const char loc[] = "SZ";
+
+const char APName[] = "Hollow Apollo - BJ"; // Wifi Network Name
+const char loc[] = "BJ";
 
 const char APPass[] = "liftoff54321";  // Password
 WiFiServer server(80);                 // Port
@@ -62,7 +67,7 @@ WiFiServer server(80);                 // Port
   The neopixels serve as status LEDs for different subsystems.
 */
 
-// Pixel order, based upon physical connections
+// Pixel order, based upon physical connection order
 enum Pixel {RTC_PIXEL=0, SD_PIXEL=1, WIFI_PIXEL=2};
 
 // Assign number of pixels, pin and pixel type
@@ -70,9 +75,9 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(3, 2, NEO_RGB + NEO_KHZ800);
 
 // Define Specific Colors (see comments for meaning of each color)
 // Syntax: pixels.Color(red, green, blue)
-uint32_t red =   pixels.Color(0, 255, 0);   // Error
-uint32_t green = pixels.Color(255, 0, 0);  // Ready
-uint32_t blue =  pixels.Color(0, 0, 255); // Loading
+const uint32_t red =   pixels.Color(0, 255, 0); // Error
+const uint32_t green = pixels.Color(255, 0, 0); // Ready
+const uint32_t blue =  pixels.Color(0, 0, 255); // Loading
 
 
 
@@ -96,7 +101,7 @@ DateTime lastRelayUpdate = DateTime (2020, 1, 1);
 
 // SD file Name and header.
 // Header row is appended each time the file name is changed.
-char file_name[] = "00000.CSV";
+char file_name[] = "XX_00000.CSV";
 
 // Define the header row
 #define QUOTE(...) #__VA_ARGS__
@@ -162,8 +167,8 @@ const uint8_t sensor_interval_seconds = 15; // Seconds between readings
 const uint16_t file_interval_seconds = 1200;  // seconds between file name changes
 #else
 // TODO: Change sensor interval
-const uint8_t sensor_interval_seconds = 240;   // 4 min
-const uint32_t file_interval_seconds = 259200; // 3 days
+const uint8_t sensor_interval_seconds = 30;   // 0.5 min
+const uint32_t file_interval_seconds = 86500; // just over 1 day
 #endif
 
 
@@ -179,6 +184,7 @@ void setup() {
 
   Serial.print("\n\n\n\nInitializing Hollow Apollo...\n");
   Serial.print("=============================\n\n");
+
 
   // Setup the status LEDs
   setupNeopixels();
@@ -324,11 +330,11 @@ bool setupSensors() {
   ina219_R.begin();
   ina219_R.setCalibration_32V_1A();
 
-  //sht31_L.begin(0x44);
-  //sht31_R.begin(0x45);
+  sht31_L.begin(0x44);
+  sht31_R.begin(0x45);
 
   // Outside T/RH
-  //am2315.begin();
+  am2315.begin();
   Serial.print("sensors initialized.\n");
   return true;
 }
@@ -427,9 +433,9 @@ void setFilename(char *filename) {
   byte high = EEPROM.read(0);
   byte low  = EEPROM.read(1);
   unsigned int cnt = (high << 8) + low; //reconstruct the integer
-
+  
   // update the file name variable
-  sprintf(filename, "%05d.CSV", cnt);
+  sprintf(filename, "%s_%05d.CSV", loc, cnt);
 
   Serial.print("file name set: \n\t\t");
   Serial.println(filename);
@@ -487,19 +493,19 @@ String readSensors(float f[]) {
   delay(100);
 
   // Read left inside T/RH
-  //f[10] = sht31_L.readTemperature();
-  //f[11] = sht31_L.readHumidity();
+  f[10] = sht31_L.readTemperature();
+  f[11] = sht31_L.readHumidity();
   delay(100);
 
   // Read right inside T/RH
-  //f[12] = sht31_R.readTemperature();
-  //f[13] = sht31_R.readHumidity();
+  f[12] = sht31_R.readTemperature();
+  f[13] = sht31_R.readHumidity();
   delay(100);
 
   //Read outside T/RH
-  //f[14] = am2315.readTemperature();
+  f[14] = am2315.readTemperature();
   delay(100); // KEEP THIS DELAY!
-  //f[15] = am2315.readHumidity();
+  f[15] = am2315.readHumidity();
   delay(100);
 
   // make a string for assembling the data to log:
